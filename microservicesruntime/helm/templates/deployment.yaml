@@ -75,7 +75,7 @@ spec:
           - name: SAG_IS_LICENSE_FILE
             value: {{ .Values.microservicesruntime.installDir }}/licenseKey.xml
           - name: SAG_IS_CONFIG_PROPERTIES
-            value: "{{ .Values.microservicesruntime.installDir }}/applicationFile.properties,{{ .Values.microservicesruntime.installDir }}/application.properties"
+            value: "{{ .Values.microservicesruntime.installDir }}/applicationFile.properties,{{ .Values.microservicesruntime.installDir }}/application.properties,/applicationFile.properties,{{ .Values.microservicesruntime.configDir }}"
           {{- if .Values.persistence.enabled }}
           - name: HOST_DIR
             value: {{ .Values.microservicesruntime.installDir }}/pv
