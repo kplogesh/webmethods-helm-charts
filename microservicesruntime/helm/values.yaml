@@ -144,7 +144,7 @@ microservicesruntime:
     min:                    "512M"
     # -- Maximum of heap memory
     max:                    "512M"
-  computedHash: ""
+  computedConfigHash: ""
   # -- Defines installation folder which was using on image creation
   installDir:      /opt/softwareag/IntegrationServer # This is the installation directory which you use on creating the image
   # -- List of application properties which are added into config map in YAML format. See [Integration Server Configuration Variables](https://documentation.softwareag.com/webmethods/integration_server/pie10-15/webhelp/pie-webhelp/index.html#page/pie-webhelp%2Fre-configuration_variables_assets.html)
