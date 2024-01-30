@@ -256,6 +256,11 @@ affinity: {}
 # -- Deploy Nginx as external LB
 externalLoadBalancer: false
 
+# values.yaml
+# values.yaml
+extraFiles: []
+
+
 # Use persistent volume for IS packages, configuration settings and logs ...
 persistence:
   # -- Use persistent volume for IS packages, configuration settings and logs. If `persistence.existingClaim` not set, a claim will be automatically created.
