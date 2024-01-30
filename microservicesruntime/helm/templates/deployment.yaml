@@ -48,7 +48,7 @@ spec:
         {{- with .Values.extraLabels -}}
         {{ toYaml . | nindent 8 }}
         {{- end }}
-        {{- with .Values.computedConfigHash }}
+        {{- if .Values.computedConfigHash }}
         computedConfigHash: {{ .Values.computedConfigHash }}
         {{- end }}
     spec:
