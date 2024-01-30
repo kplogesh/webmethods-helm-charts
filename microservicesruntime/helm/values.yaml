@@ -122,6 +122,8 @@ startupProbe:
   failureThreshold: 60
   periodSeconds: 30            # wait 10 * 60 seconds for starting readinessProbe and livenessProbe
 
+revisionHistoryLimit: 10
+
 microservicesruntime:
   # -- Defines external runtime port
   httpsPort:                5556

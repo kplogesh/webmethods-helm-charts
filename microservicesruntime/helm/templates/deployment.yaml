@@ -217,6 +217,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
       {{ if and .Values.statefulSet .Values.volumeClaimTemplates }}
   volumeClaimTemplates:
   {{- toYaml .Values.volumeClaimTemplates | nindent 2 }}
