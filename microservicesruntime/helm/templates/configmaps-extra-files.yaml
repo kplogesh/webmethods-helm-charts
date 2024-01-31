@@ -18,21 +18,49 @@
 #  *   limitations under the License.
 #  *
 #  */
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#  name: {{ .fileName | replace "." "-" }}
+#  labels:
+#    {{- include "common.labels.standard" $ | nindent 4 }}
+#    {{- with $.Values.extraLabels }}
+#    {{ toYaml . | nindent 4 }}
+#    {{- end }}
+# {{- if .binary }}
+# binaryData:
+#  {{ .fileName }}: {{ .content | b64enc}}
+#{{- else }}
+# data:
+#  {{ .fileName }}: |-
+#    {{- .content | nindent 4 }}
+# {{- end }}
+# {{- end }}
+# */
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .fileName | replace "." "-" }}
+  name: {{ .name }}
   labels:
     {{- include "common.labels.standard" $ | nindent 4 }}
     {{- with $.Values.extraLabels }}
     {{ toYaml . | nindent 4 }}
     {{- end }}
-{{- if .binary }}
+{{- if .binaryData }}
 binaryData:
-  {{ .fileName }}: {{ .content | b64enc}}
+  {{- range $key, $val := .binaryData }}
+  {{ $key }}: {{ $val | b64enc }}
+  {{- end }}
 {{- else }}
 data:
-  {{ .fileName }}: |-
-    {{- .content | nindent 4 }}
+  {{- range $key, $val := .data }}
+  {{ $key }}: |-
+    {{- if kindIs "string" $val }}
+    {{ tpl $val $ | nindent 4 }}
+    {{- else }}
+    {{ toYaml $val | nindent 4 }}
+    {{- end }}
+  {{- end }}
 {{- end }}
 {{- end }}
