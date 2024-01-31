@@ -1,4 +1,4 @@
-{{ range .Values.extraConfigMaps }}
+{{- range .Values.extraConfigMaps }}
 ---
 # /*
 #  * Copyright (c) 2023 Software AG, Darmstadt, Germany and/or its licensors
