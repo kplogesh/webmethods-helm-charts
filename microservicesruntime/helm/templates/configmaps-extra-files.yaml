@@ -19,7 +19,7 @@ data:
   {{- range $key, $val := .data }}
   {{ $key }}: |-
     {{- if kindIs "string" $val }}
-    {{ tpl $val $ | nindent 4 }}
+    {{- tpl $val $ | nindent 4 }}
     {{- else }}
     {{ toYaml $val | nindent 4 }}
     {{- end }}
