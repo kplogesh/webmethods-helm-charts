@@ -171,22 +171,8 @@ spec:
             {{- end }}
             {{- end }}
             {{- end }}
-            {{- end }}    
-            # Secrets automount feature
-            {{- if .Values.secrets }}
-            {{- range $name, $map := .Values.secrets }}
-            {{- if $map.automount }} 
-            {{- if $map.data }}
-            {{- range $key, $val:= $map.data }}
-            - name: {{ $name }}
-              mountPath: {{ default $.Values.secretAutomountDir $map.automountDir }}/{{ $key }}
-              subPath: {{ $key }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- range .Values.secretsMounts }}
+            {{- end }}                        
+            {{- range .Values.secretMounts }}
             - name: {{ .name }}
               mountPath: {{ .path }}
               {{- if .subPath }}
@@ -251,16 +237,6 @@ spec:
         {{- end }}
         {{- end }}
         {{- end }}        
-        {{- if .Values.secrets }}
-        # automount secrets volumes
-        {{- range $name, $map := .Values.secrets }}
-        {{- if $map.automount }}                    
-        - name: {{ $name }}
-          configMap:
-            name: {{ $name }}
-        {{- end }}
-        {{- end }}
-        {{- end }} 
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
