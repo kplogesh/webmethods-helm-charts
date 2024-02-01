@@ -48,6 +48,10 @@ spec:
         {{- with .Values.extraLabels -}}
         {{ toYaml . | nindent 8 }}
         {{- end }}
+        {{- if .Values.microservicesruntime.checksum }}
+        checksum/config: {{ printf "%s" ( printf "%s" ( .Values.extraConfigMaps | toJson ) ( .Values.microservicesruntime.propertiesFile.content | toJson ) | sha256sum ) | quote }}
+        {{- end }}
+    spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
