@@ -162,7 +162,8 @@ microservicesruntime:
   propertiesFile: 
     content: |
       # application properties file 
-      test122
+      test122,asdff
+      asdfdf,asdfdf
 
   # -- list of custom java opts e.g. "-Dmy.prop1=value1" "-Dmy.prop2=value2"
   javaCustomOpts:
