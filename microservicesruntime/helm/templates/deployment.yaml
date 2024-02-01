@@ -49,7 +49,7 @@ spec:
         {{ toYaml . | nindent 8 }}
         {{- end }}
         {{- if .Values.microservicesruntime.checksum }}
-        checksum/config: {{ printf "%s" ( printf "%s" ( .Values.extraConfigMaps | toJson ) ( .Values.microservicesruntime.propertiesFile.content | toJson ) | sha256sum ) | quote }}
+        checksum/config: {{ printf "%s" ( printf "%s" ( .Values.extraConfigMaps | toJson ) ( .Values.microservicesruntime.propertiesFile.content | toJson ) | sha256sum ) | trunc 63 | quote }}
         {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
