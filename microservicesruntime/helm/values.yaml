@@ -84,12 +84,7 @@ extraContainers: []
 extraInitContainers: []
 
 # -- Extra config maps for addtional configurations such as extra ports, etc.
-extraConfigMaps: 
-  configmap1:
-    name: myconfig1
-    data:
-      abc.prop: 
-        blabla1: bla
+extraConfigMaps: {}
 
 # -- Extra command, which is executed before the startContainer entrypoint script of the Microservice Runtime
 extraCommand: ""
