@@ -256,8 +256,8 @@ spec:
         {{- range $name, $map := .Values.secrets }}
         {{- if $map.automount }}                    
         - name: {{ $name }}
-          configMap:
-            name: {{ $name }}
+          secret:
+            secretName: {{ $name }}
         {{- end }}
         {{- end }}
         {{- end }} 
