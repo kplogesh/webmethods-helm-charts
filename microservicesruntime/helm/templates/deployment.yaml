@@ -177,11 +177,8 @@ spec:
             {{- range $name, $map := .Values.secrets }}
             {{- if $map.automount }} 
             {{- if $map.data }}
-            {{- range $key, $val:= $map.data }}
             - name: {{ $name }}
-              mountPath: {{ default $.Values.secretAutomountDir $map.automountDir }}/{{ $key }}
-              subPath: {{ $key }}
-            {{- end }}
+              mountPath: {{ default $.Values.secretAutomountDir $map.automountDir }}
             {{- end }}
             {{- end }}
             {{- end }}
