@@ -44,15 +44,9 @@ extraPorts: []
 
 # -- Secret mounts, A list of secrets and their paths to mount inside the pod
 secretMounts: []
-#  - name: default-secrets
-#    secretName: elastic-certificates
-#    path: /usr/share/elasticsearch/config/certs
-#    defaultMode: 0755
 
 # -- Secret volumes, A list of secrets
 secretVolumes: []
-# - name: msr-secrets
-#   secretName: msr-secrets
 
 # -- Extra volume mounts
 extraVolumeMounts: []
@@ -327,3 +321,18 @@ metering:
   # -- The password for the metering client truststore.
   # Configure this property only if you use a truststore.
   trustStorePassword:
+
+# Provide the secrets required for the container. Currently supported for Secret and SealedSecret.
+secrets: []
+# Example. Each of the array elements will create a new secret. 
+#  - name: msr-secrets
+#    kind: Secret 
+#    type: Opaque
+#    data: # Do not provide plain passwords. For MSR, use the password encryption mechanism and feed the encrypted password here
+#      param1: param-value
+#      param2: param-value # Add more parameter as required
+#  - name: interface-secrets
+#    kind: SealedSecret
+#    data: # Do not provide plain passwords. Provide the sealed information here.
+#      param1: param-value
+#      param2: param-value
