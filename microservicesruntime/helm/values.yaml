@@ -179,7 +179,8 @@ microservicesruntime:
     min:                    "512M"
     # -- Maximum of heap memory
     max:                    "512M"
-  checksum: true
+  # -- Defines the checksum parameter to control the deployment restarts based on the configuration updates. 
+  # checksum: true
   # -- Defines installation folder which was using on image creation
   installDir:      /opt/softwareag/IntegrationServer # This is the installation directory which you use on creating the image
   configDir: /opt/softwareag/IntegrationServer/AppConfig # This is the configuration directory which you use to place the multiple application properties files
