@@ -156,7 +156,9 @@ startupProbe:
     port: http
   failureThreshold: 60
   periodSeconds: 30            # wait 10 * 60 seconds for starting readinessProbe and livenessProbe
-
+  
+# -- Defines the checksum parameter to control the deployment restarts based on the configuration updates. 
+# checksum: true
 microservicesruntime:
   # -- Defines external runtime port
   httpsPort:                5556
@@ -179,8 +181,6 @@ microservicesruntime:
     min:                    "512M"
     # -- Maximum of heap memory
     max:                    "512M"
-  # -- Defines the checksum parameter to control the deployment restarts based on the configuration updates. 
-  # checksum: true
   # -- Defines installation folder which was using on image creation
   installDir:      /opt/softwareag/IntegrationServer # This is the installation directory which you use on creating the image
   configDir: /opt/softwareag/IntegrationServer/AppConfig # This is the configuration directory which you use to place the multiple application properties files
