@@ -183,7 +183,7 @@ spec:
             {{- end }}
             {{- end }}
             {{- end }}
-            {{- range .Values.secretsMounts }}
+            {{- range .Values.secretMounts }}
             - name: {{ .name }}
               mountPath: {{ .path }}
               {{- if .subPath }}
