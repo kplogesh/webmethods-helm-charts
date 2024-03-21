@@ -156,6 +156,12 @@ startupProbe:
     port: http
   failureThreshold: 60
   periodSeconds: 30            # wait 10 * 60 seconds for starting readinessProbe and livenessProbe
+
+# Define the msr license
+license:
+
+# Define the entirex license
+entirexlicense:
   
 # -- Defines the checksum parameter to control the deployment restarts based on the configuration updates. 
 # checksum: true

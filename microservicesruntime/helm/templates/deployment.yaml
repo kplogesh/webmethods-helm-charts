@@ -44,7 +44,7 @@ spec:
         {{- end }}
         {{- include "common.prometheus.annotations" (dict "port" .Values.service.port) | nindent 8 }}
         {{- if .Values.checksum }}
-        checksum/config: {{ printf "%s%s%s" (include (print $.Template.BasePath "/configmap.yaml") .) (include (print $.Template.BasePath "/configmaps-extra.yaml") .) (include (print $.Template.BasePath "/secret.yaml") .) | sha256sum }}
+        checksum/config: {{ printf "%s%s%s%s" (include (print $.Template.BasePath "/configmap.yaml") .) (include (print $.Template.BasePath "/configmaps-extra.yaml") .) (include (print $.Template.BasePath "/secret.yaml") .) (include (print $.Template.BasePath "/license.yaml") .) | sha256sum }}
         {{- end }}
       labels:
         {{- include "common.labels.matchLabels" . | nindent 8 }}
