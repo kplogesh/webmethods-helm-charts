@@ -125,7 +125,12 @@ spec:
   successfulJobsHistoryLimit: {{ $job.successfulJobsHistoryLimit }}
 
   {{ else }}
-
+  {{- if hasKey $job "backoffLimit" }}
+  backoffLimit: {{ $job.backoffLimit }}
+  {{- end }}
+  {{- if hasKey $job "activeDeadlineSeconds" }}
+  activeDeadlineSeconds: {{ $job.activeDeadlineSeconds }}
+  {{- end }}
   template:
     metadata:
       name: {{ $fullName }}-{{ $job.name }}
@@ -135,8 +140,6 @@ spec:
           {{- toYaml $extraLabels | nindent 8 }}
          {{- end }}
     spec:
-      backoffLimit: {{ $job.backoffLimit }}
-      activeDeadlineSeconds: {{ $job.activeDeadlineSeconds }}
       {{- if hasKey $job "serviceAccount" }}
       {{- if hasKey $job.serviceAccount "name" }}
       serviceAccountName: {{ $job.serviceAccount.name }}
