@@ -105,6 +105,8 @@ extraConfigMapAutomountDir: /mnt/config
 
 jobs:
   - name: test-presync-argo 
+    annotations:
+      argocd.argoproj.io/hook: PreSync
     command: ["echo", "Hello, World!"]
     image:
       # -- Pull this image. Default is MSR from [Software AG Container Registry](https://containers.softwareag.com)

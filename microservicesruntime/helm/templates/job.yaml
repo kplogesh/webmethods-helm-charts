@@ -36,7 +36,6 @@ metadata:
     {{- end }}
   {{- with $job.annotations }}
   annotations:
-    argocd.argoproj.io/hook: PreSync
 {{ toYaml . | indent 4 }}
   {{- end }}
 spec:
