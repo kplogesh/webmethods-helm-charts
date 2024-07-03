@@ -108,6 +108,8 @@ jobs:
     annotations:
       argocd.argoproj.io/hook: PreSync
     restartPolicy: Never
+    securityContext:
+      runAsUser: 0
     command: ["/bin/sh"]
     args: 
       - "-c"
