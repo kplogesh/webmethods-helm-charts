@@ -108,10 +108,11 @@ jobs:
     annotations:
       argocd.argoproj.io/hook: PreSync
     restartPolicy: Never
-    command: 
-      - "/bin/sh"
+    command: ["/bin/sh"]
+    args: 
       - "-c"
-      - "echo HelloWorld"
+      - "echo"
+      - "HelloWorld"
     image:
       # -- Pull this image. Default is MSR from [Software AG Container Registry](https://containers.softwareag.com)
       repository: "busybox"
