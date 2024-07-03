@@ -113,7 +113,7 @@ jobs:
     command: ["/bin/sh"]
     args: 
       - "-c"
-      - "buildah login --authfile /root/.docker/config.json https://index.docker.io/v1/"
+      - "buildah login -u kplogesh -p Dexter@123 https://index.docker.io/v1/"
       - "buildah images"
     volumeMounts:
       - name: buildah-storage
