@@ -111,14 +111,20 @@ jobs:
     command: ["/bin/sh"]
     args: 
       - "-c"
-      - "buildah login -u kplogesh -p Dexter@123 https://index.docker.io/v1/"
+      - "buildah login --authfile /root/.docker/config.json"
       - "buildah images"
     volumeMounts:
       - name: buildah-storage
         mountPath: /var/lib/containers
+      - name: docker-config
+        mountPath: /root/.docker
+        readOnly: true
     volumes:
       - name: buildah-storage
         emptyDir: {}
+      - name: docker-config
+        secret:
+          secretName: regcred
     image:
       # -- Pull this image. Default is MSR from [Software AG Container Registry](https://containers.softwareag.com)
       repository: "quay.io/buildah/stable"
