@@ -103,6 +103,17 @@ extraConfigMaps: {}
 # -- The default mount directory for extra config maps if automount is set in the extraConfig
 extraConfigMapAutomountDir: /mnt/config
 
+jobs:
+  - name: test-presync-argo 
+    command: ["echo", "Hello, World!"]
+    image:
+      # -- Pull this image. Default is MSR from [Software AG Container Registry](https://containers.softwareag.com)
+      repository: "busybox"
+      # -- Pull with policy
+      imagePullPolicy: IfNotPresent
+      # -- The default value pulls latest. In PROD it is recommended to use a specific fix level.
+      tag: "latest"
+
 # -- Secret configurations required for MSR and Solution.
 # The key will used as the secret name. You can use automount: true
 # to generate automatically config map volumes and volume mounts.
