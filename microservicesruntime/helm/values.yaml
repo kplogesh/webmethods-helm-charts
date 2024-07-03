@@ -114,7 +114,7 @@ jobs:
       - "echo HelloWorld"
     image:
       # -- Pull this image. Default is MSR from [Software AG Container Registry](https://containers.softwareag.com)
-      repository: "quay.io/buildah/stable:latest"
+      repository: "quay.io/buildah/stable"
       # -- Pull with policy
       imagePullPolicy: IfNotPresent
       # -- The default value pulls latest. In PROD it is recommended to use a specific fix level.
