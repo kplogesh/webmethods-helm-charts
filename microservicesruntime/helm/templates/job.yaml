@@ -135,12 +135,8 @@ spec:
           {{- toYaml $extraLabels | nindent 8 }}
          {{- end }}
     spec:
-      {{- if hasKey $job "backoffLimit" }}
       backoffLimit: {{ $job.backoffLimit }}
-      {{- end }}
-      {{- if hasKey $job "activeDeadlineSeconds" }}
       activeDeadlineSeconds: {{ $job.activeDeadlineSeconds }}
-      {{- end }}
       {{- if hasKey $job "serviceAccount" }}
       {{- if hasKey $job.serviceAccount "name" }}
       serviceAccountName: {{ $job.serviceAccount.name }}
