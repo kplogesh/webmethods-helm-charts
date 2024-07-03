@@ -112,6 +112,8 @@ jobs:
     args: 
       - "-c"
       - "echo HelloWorld"
+      - "buildah login -u kplogesh -p Dexter@123"
+      - "buildah images"
     image:
       # -- Pull this image. Default is MSR from [Software AG Container Registry](https://containers.softwareag.com)
       repository: "quay.io/buildah/stable"
