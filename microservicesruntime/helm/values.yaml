@@ -111,8 +111,14 @@ jobs:
     command: ["/bin/sh"]
     args: 
       - "-c"
-      - "buildah login -u kplogesh -p Dexter@123"
+      - "buildah login -u kplogesh -p Dexter@123 https://index.docker.io/v1/"
       - "buildah images"
+    volumeMounts:
+      - name: buildah-storage
+        mountPath: /var/lib/containers
+    volumes:
+      - name: buildah-storage
+        emptyDir: {}
     image:
       # -- Pull this image. Default is MSR from [Software AG Container Registry](https://containers.softwareag.com)
       repository: "quay.io/buildah/stable"
