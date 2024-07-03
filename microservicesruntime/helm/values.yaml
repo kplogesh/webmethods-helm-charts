@@ -104,12 +104,11 @@ extraConfigMaps: {}
 extraConfigMapAutomountDir: /mnt/config
 
 jobs:
-  - name: test-presync-argo 
+  - name: image-transfer-to-prod-registry 
     annotations:
       argocd.argoproj.io/hook: PreSync
+      argocd.argoproj.io/hook-delete-policy: HookSucceeded
     restartPolicy: Never
-    securityContext:
-      runAsUser: 0
     command: ["/bin/sh"]
     args: 
       - "-c"
