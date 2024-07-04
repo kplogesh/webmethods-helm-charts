@@ -111,6 +111,9 @@ jobs:
       argocd.argoproj.io/hook: PreSync
       #argocd.argoproj.io/hook-delete-policy: HookSucceeded
     restartPolicy: Never
+    env:
+      - name: REGISTRY_AUTH_FILE
+        value: /config/.dockerconfigjson
     envFrom:
       - secretRef:
           name: dockerhub-secret
@@ -129,9 +132,18 @@ jobs:
     volumeMounts:
       - name: buildah-storage
         mountPath: /var/lib/containers
+      - name: docker-config
+        mountPath: /config
+        readOnly: true
     volumes:
       - name: buildah-storage
         emptyDir: {}
+      - name: docker-config
+        secret:
+          secretName: regcred
+          items:
+          - key: .dockerconfigjson
+            path: .dockerconfigjson
     image:
       # -- Pull this image. Default is MSR from [Software AG Container Registry](https://containers.softwareag.com)
       repository: "quay.io/buildah/stable"
