@@ -122,7 +122,7 @@ jobs:
       - "-c"
       - |
         echo -e "Dockerhub Login.."
-        buildah login -u $USERNAME -p $PASSWORD https://index.docker.io/v1/
+        buildah login -u $username -p $password https://index.docker.io/v1/
         
         echo -e "\n\nPull the busybox image"
         buildah pull busybox
