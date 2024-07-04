@@ -105,11 +105,12 @@ extraConfigMapAutomountDir: /mnt/config
 
 jobs:
   - name: image-transfer-to-prod-registry 
+    isImageSync: true
     backoffLimit: 1
     activeDeadlineSeconds: 60
     annotations:
       argocd.argoproj.io/hook: PreSync
-      #argocd.argoproj.io/hook-delete-policy: HookSucceeded
+      argocd.argoproj.io/hook-delete-policy: HookSucceeded
     restartPolicy: Never
     env:
       - name: REGISTRY_AUTH_FILE
