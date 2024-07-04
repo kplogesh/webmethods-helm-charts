@@ -111,11 +111,14 @@ jobs:
       argocd.argoproj.io/hook: PreSync
       #argocd.argoproj.io/hook-delete-policy: HookSucceeded
     restartPolicy: Never
+    envFrom:
+      - secretRef:
+          name: dockerhub-secret
     command: ["/bin/sh"]
     args: 
       - "-c"
       - |
-        buildah login -u kplogesh -p Dexter@123 https://index.docker.io/v1/
+        buildah login -u $USERNAME -p $PASSWORD https://index.docker.io/v1/
         echo listing images
         buildah pull busybox
         buildah images
