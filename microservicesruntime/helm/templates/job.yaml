@@ -24,6 +24,7 @@
 {{- $context := . }}
 
 {{- range $job := .Values.jobs }}
+{{- if or (not (hasKey $job "isImageSync")) $job.isImageSync }}
 ---
 apiVersion: batch/v1
 kind: {{ if $job.schedule }}CronJob{{ else }}Job{{ end }}
@@ -42,6 +43,12 @@ spec:
   {{ if $job.schedule }}
   jobTemplate:
     spec:
+      {{- if hasKey $job "backoffLimit" }}
+      backoffLimit: {{ $job.backoffLimit }}
+      {{- end }}
+      {{- if hasKey $job "activeDeadlineSeconds" }}
+      activeDeadlineSeconds: {{ $job.activeDeadlineSeconds }}
+      {{- end }}
       template:
         metadata:
           name: {{ $fullName }}-{{ $job.name }}
@@ -212,5 +219,5 @@ spec:
       {{- end }}
  
   {{ end }}
-
+{{- end }}
 {{- end -}}
