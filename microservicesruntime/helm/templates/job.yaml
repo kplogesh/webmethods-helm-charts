@@ -24,7 +24,9 @@
 {{- $context := . }}
 
 {{- range $job := .Values.jobs }}
-{{- if or (not (hasKey $job "isImageSync")) $job.isImageSync }}
+# If argoPreSync.enabled is true and job.isImageSyncTask is explicitly set to true, the job is created.
+# If job.isImageSyncTask is not set (i.e., does not exist) or is explicitly set to false, the job is created regardless of the global argoPreSync parameter.
+{{- if or (and .Values.global.argoPreSync.enabled (hasKey $job "isImageSyncTask") $job.isImageSyncTask) (not (hasKey $job "isImageSyncTask")) (not $job.isImageSyncTask) }}
 ---
 apiVersion: batch/v1
 kind: {{ if $job.schedule }}CronJob{{ else }}Job{{ end }}

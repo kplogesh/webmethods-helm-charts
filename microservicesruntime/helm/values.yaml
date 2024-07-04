@@ -103,35 +103,41 @@ extraConfigMaps: {}
 # -- The default mount directory for extra config maps if automount is set in the extraConfig
 extraConfigMapAutomountDir: /mnt/config
 
+# Global parameters for image transfer job. 
+argoPreSync:
+  # Specify whether true or false to consider this as a argocd presync event.
+  enabled: true
+
 jobs:
   - name: image-transfer-to-prod-registry 
-    isImageSync: true
+    # Specify whether it is a job meant for image transfer. If not specified, it is considered a normal job
+    isImageSyncTask: true
     backoffLimit: 1
     activeDeadlineSeconds: 60
+    restartPolicy: Never
     annotations:
       argocd.argoproj.io/hook: PreSync
       argocd.argoproj.io/hook-delete-policy: HookSucceeded
-    restartPolicy: Never
     env:
       - name: REGISTRY_AUTH_FILE
         value: /config/.dockerconfigjson
     command: ["/bin/sh"]
     args: 
       - "-c"
-      - |       
-        echo -e "\n\nPull the busybox image"
+      - |
+        echo "Pull the busybox image"
         buildah pull busybox
 
-        echo -e "\n\nListing Images"
+        echo "Listing Images"
         buildah images
 
-        echo -e "\n\nTag the busybox image to dockerhub kplogesh-repository"
+        echo "Tag the busybox image to dockerhub kplogesh-repository"
         buildah tag busybox kplogesh/openshift:busybox
 
-        echo -e "\n\nPush the busybox image to dockerhub kplogesh-repository"
+        echo "Push the busybox image to dockerhub kplogesh-repository"
         buildah push kplogesh/openshift:busybox
 
-        echo -e "\n\nListing Images"
+        echo "Listing Images"
         buildah images
     volumeMounts:
       - name: buildah-storage
