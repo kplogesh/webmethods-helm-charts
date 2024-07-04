@@ -21,7 +21,7 @@
 {{- $labels   := include "common.labels.standard" . -}}
 {{- $imagePullSecrets := .Values.imagePullSecrets -}}
 {{- $extraLabels      := .Values.extraLabels      -}}
-{{- $globalArgoPreSyncEnabled := default false .Values.global.argoPreSync.enabled }}
+{{- $globalArgoPreSyncEnabled := default false .Values.argoPreSync.enabled }}
 {{- $context := . }}
 
 {{- range $job := .Values.jobs }}
