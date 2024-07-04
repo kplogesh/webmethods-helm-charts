@@ -121,13 +121,22 @@ jobs:
     args: 
       - "-c"
       - |
+        echo -e "Dockerhub Login..\n"
         buildah login -u $USERNAME -p $PASSWORD https://index.docker.io/v1/
-        echo listing images
+        
+        echo -e "Pull the busybox image\n"
         buildah pull busybox
+
+        echo -e "Listing Images\n"
         buildah images
 
+        echo -e "Tag the busybox image to dockerhub kplogesh-repository\n"
         buildah tag busybox kplogesh/openshift:busybox
+
+        echo -e "Push the busybox image to dockerhub kplogesh-repository\n"
         buildah push kplogesh/openshift:busybox
+
+        echo -e "Listing Images\n"
         buildah images
     volumeMounts:
       - name: buildah-storage
