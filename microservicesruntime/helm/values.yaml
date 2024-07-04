@@ -113,7 +113,7 @@ jobs:
     restartPolicy: Never
     env:
       - name: REGISTRY_AUTH_FILE
-        value: /config/.dockerconfigjson
+        value: /tmp/.dockerconfigjson
     envFrom:
       - secretRef:
           name: dockerhub-secret
@@ -142,7 +142,7 @@ jobs:
       - name: buildah-storage
         mountPath: /var/lib/containers
       - name: docker-config
-        mountPath: /config
+        mountPath: /tmp
         readOnly: true
     volumes:
       - name: buildah-storage
