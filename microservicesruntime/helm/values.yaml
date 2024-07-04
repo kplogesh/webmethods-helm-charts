@@ -113,7 +113,7 @@ jobs:
     restartPolicy: Never
     env:
       - name: REGISTRY_AUTH_FILE
-        value: /var/lib/containers/config/.dockerconfigjson
+        value: /config/.dockerconfigjson
     envFrom:
       - secretRef:
           name: dockerhub-secret
@@ -122,7 +122,7 @@ jobs:
       - "-c"
       - |
         echo -e "Dockerhub Login.."
-        buildah login -u $username -p $password https://index.docker.io/v1/
+        buildah login -u $username -p $PASSWORD https://index.docker.io/v1/
         
         echo -e "\n\nPull the busybox image"
         buildah pull busybox
@@ -141,11 +141,15 @@ jobs:
     volumeMounts:
       - name: buildah-storage
         mountPath: /var/lib/containers
+      - name: config-dir
+        mountPath: /config
       - name: docker-config
-        mountPath: /var/lib/containers/config
+        mountPath: /config
         readOnly: true
     volumes:
       - name: buildah-storage
+        emptyDir: {}
+      - name: config-dir
         emptyDir: {}
       - name: docker-config
         secret:
