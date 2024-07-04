@@ -105,7 +105,7 @@ extraConfigMapAutomountDir: /mnt/config
 
 jobs:
   - name: image-transfer-to-prod-registry 
-    isImageSync: true
+    isImageSync: false
     backoffLimit: 1
     activeDeadlineSeconds: 60
     annotations:
