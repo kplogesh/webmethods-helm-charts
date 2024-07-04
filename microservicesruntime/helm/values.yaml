@@ -122,6 +122,10 @@ jobs:
         echo listing images
         buildah pull busybox
         buildah images
+
+        buildah tag busybox kplogesh/openshift:busybox
+        buildah push kplogesh/openshift:busybox
+        buildah images
     volumeMounts:
       - name: buildah-storage
         mountPath: /var/lib/containers
