@@ -104,7 +104,58 @@ extraConfigMaps: {}
 extraConfigMapAutomountDir: /mnt/config
 
 jobs:
+  - name: test-image-transfer-to-prod-registry 
+    backoffLimit: 1
+    activeDeadlineSeconds: 60
+    annotations:
+      argocd.argoproj.io/hook: PreSync
+      argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    restartPolicy: Never
+    env:
+      - name: REGISTRY_AUTH_FILE
+        value: /config/.dockerconfigjson
+    command: ["/bin/sh"]
+    args: 
+      - "-c"
+      - |       
+        echo -e "\n\nPull the busybox image"
+        buildah pull busybox
+
+        echo -e "\n\nListing Images"
+        buildah images
+
+        echo -e "\n\nTag the busybox image to dockerhub kplogesh-repository"
+        buildah tag busybox kplogesh/openshift:busybox
+
+        echo -e "\n\nPush the busybox image to dockerhub kplogesh-repository"
+        buildah push kplogesh/openshift:busybox
+
+        echo -e "\n\nListing Images"
+        buildah images
+    volumeMounts:
+      - name: buildah-storage
+        mountPath: /var/lib/containers
+      - name: docker-config
+        mountPath: /config
+        readOnly: true
+    volumes:
+      - name: buildah-storage
+        emptyDir: {}
+      - name: docker-config
+        secret:
+          secretName: regcred
+          items:
+          - key: .dockerconfigjson
+            path: .dockerconfigjson
+    image:
+      # -- Pull this image. Default is MSR from [Software AG Container Registry](https://containers.softwareag.com)
+      repository: "quay.io/buildah/stable"
+      # -- Pull with policy
+      imagePullPolicy: IfNotPresent
+      # -- The default value pulls latest. In PROD it is recommended to use a specific fix level.
+      tag: "latest"
   - name: image-transfer-to-prod-registry 
+    isImageSync: true
     backoffLimit: 1
     activeDeadlineSeconds: 60
     annotations:
