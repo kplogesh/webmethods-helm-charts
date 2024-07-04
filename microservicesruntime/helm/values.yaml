@@ -114,9 +114,6 @@ jobs:
     env:
       - name: REGISTRY_AUTH_FILE
         value: /config/.dockerconfigjson
-    envFrom:
-      - secretRef:
-          name: dockerhub-secret
     command: ["/bin/sh"]
     args: 
       - "-c"
