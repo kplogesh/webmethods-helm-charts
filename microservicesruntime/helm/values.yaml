@@ -109,7 +109,7 @@ jobs:
     activeDeadlineSeconds: 60
     annotations:
       argocd.argoproj.io/hook: PreSync
-      argocd.argoproj.io/hook-delete-policy: HookSucceeded
+      #argocd.argoproj.io/hook-delete-policy: HookSucceeded
     restartPolicy: Never
     command: ["/bin/sh"]
     args: 
