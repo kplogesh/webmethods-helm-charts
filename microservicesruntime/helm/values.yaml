@@ -125,7 +125,7 @@ jobs:
        --src-creds kplogesh:Dexter@123 \
        --dest-creds kplogesh:Dexter@123 \
        docker://busybox:latest \
-       docker://kplogesh/openshift/busybox
+       docker://kplogesh/openshift:busybox
     image:
       repository: "quay.io/containers/skopeo"
       imagePullPolicy: IfNotPresent
