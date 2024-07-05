@@ -117,12 +117,15 @@ jobs:
     annotations:
       argocd.argoproj.io/hook: PreSync
       argocd.argoproj.io/hook-delete-policy: HookSucceeded
-    command: ["skopeo", "copy"]
+    command: ["/bin/sh"]
     args:
-    - "--src-creds kplogesh:Dexter@123"
-    - "--dest-creds kplogesh:Dexter@123"
-    - "docker.io/busybox:latest"  # Replace with source details
-    - "docker.io/kplogesh/openshift/busybox"  # Replace with local details
+    - "-c"
+    - |
+       skopeo copy \
+       --src-creds kplogesh:Dexter@123 \
+       --dest-creds kplogesh:Dexter@123 \
+       docker.io/busybox:latest \
+       docker.io/kplogesh/openshift/busybox
     image:
       repository: "quay.io/containers/skopeo"
       imagePullPolicy: IfNotPresent
