@@ -111,7 +111,7 @@ extraConfigMapAutomountDir: /mnt/config
 jobs:
   - name: image-transfer-to-prod-registry 
     # Specify whether it is a job meant for image transfer. If not specified, it is considered a normal job
-    isImageSyncTask: false
+    isImageSyncTask: true
     backoffLimit: 1
     activeDeadlineSeconds: 60
     restartPolicy: Never
