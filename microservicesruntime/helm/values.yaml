@@ -116,27 +116,27 @@ preSyncJobs:
     # Specify whether it is a job meant for image transfer. If not specified, it is considered a normal job
     isImageSyncTask: true
     envFrom:
-      - name: SRC_USERNAME
+      - name: SRCUSERNAME
         valueFrom:
           secretKeyRef:
             name: source-registry-credentials
             key: username
-      - name: SRC_PASSWORD
+      - name: SRCPASSWORD
         valueFrom:
           secretKeyRef:
             name: source-registry-credentials
             key: password
-      - name: DEST_USERNAME
+      - name: DESTUSERNAME
         valueFrom:
           secretKeyRef:
             name: local-registry-credentials
             key: username
-      - name: DEST_PASSWORD
+      - name: DESTPASSWORD
         valueFrom:
           secretKeyRef:
             name: local-registry-credentials
             key: password
-      - name: SRC_REGISTRY_HOST
+      - name: SRCREGISTRYHOST
         valueFrom:
           secretKeyRef:
             name: source-registry-credentials
