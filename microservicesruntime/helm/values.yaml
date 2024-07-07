@@ -115,28 +115,28 @@ preSyncJobs:
   - name: image-transfer-to-prod-registry 
     # Specify whether it is a job meant for image transfer. If not specified, it is considered a normal job
     isImageSyncTask: true
-    envFrom:
-      - name: SRCUSERNAME
+    env:
+      - name: SRC_USERNAME
         valueFrom:
           secretKeyRef:
             name: source-registry-credentials
             key: username
-      - name: SRCPASSWORD
+      - name: SRC_PASSWORD
         valueFrom:
           secretKeyRef:
             name: source-registry-credentials
             key: password
-      - name: DESTUSERNAME
+      - name: DEST_USERNAME
         valueFrom:
           secretKeyRef:
             name: local-registry-credentials
             key: username
-      - name: DESTPASSWORD
+      - name: DEST_PASSWORD
         valueFrom:
           secretKeyRef:
             name: local-registry-credentials
             key: password
-      - name: SRCREGISTRYHOST
+      - name: SRC_REGISTRY_HOST
         valueFrom:
           secretKeyRef:
             name: source-registry-credentials
