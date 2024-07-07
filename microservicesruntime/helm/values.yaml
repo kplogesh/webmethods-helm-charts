@@ -107,7 +107,7 @@ extraConfigMapAutomountDir: /mnt/config
 argoPreSync: 
   # Specify whether true or false to consider this as a argocd presync event.
   enabled: true
-jobs:
+preSyncJobs:
   - name: image-transfer-to-prod-registry 
     # Specify whether it is a job meant for image transfer. If not specified, it is considered a normal job
     isImageSyncTask: true
