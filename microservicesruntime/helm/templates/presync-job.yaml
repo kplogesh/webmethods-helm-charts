@@ -97,8 +97,11 @@ spec:
           - "-c"
           - |
             DEST_REGISTRY=$(echo {{ $context.Values.testimage.repository }} | sed 's|/*$||')
-            IMAGE_NAME=$(basename $(DEST_REGISTRY))
+            echo "DEST Registry is : $DEST_REGISTRY"
+            IMAGE_NAME=$(basename $DEST_REGISTRY)
             IMAGE_TAG={{ $context.Values.testimage.tag }}
+
+            echo $IMAGE_NAME $IMAGE_TAG
 
             skopeo copy \
             --src-creds $(SRC_USERNAME):$(SRC_PASSWORD) \
