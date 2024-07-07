@@ -92,13 +92,19 @@ spec:
         envFrom:
 {{ toYaml . | indent 8 }}
         {{- end }}
-        {{- if $job.command }}
-        command: {{ $job.command }}
-        {{- end }}
-        {{- with $job.args }}
+        command: ["/bin/sh"]
         args:
-{{ toYaml . | indent 8 }}
-        {{- end }}
+          - "-c"
+          - |
+            DEST_REGISTRY=$(echo {{ $context.Values.testimage.repository }} | sed 's|/*$||')
+            IMAGE_NAME=$(basename $(DEST_REGISTRY))
+            IMAGE_TAG={{ $context.Values.testimage.tag }}
+
+            skopeo copy \
+            --src-creds $(SRC_USERNAME):$(SRC_PASSWORD) \
+            --dest-creds $(DEST_USERNAME):$(DEST_PASSWORD) \
+            $(SRC_REGISTRY_HOST)/$(IMAGE_NAME):$(IMAGE_TAG) \
+            $DEST_REGISTRY:$(IMAGE_TAG)
         {{- with $job.resources }}
         resources:
 {{ toYaml . | indent 10 }}
