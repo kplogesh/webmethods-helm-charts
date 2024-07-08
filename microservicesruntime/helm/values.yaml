@@ -104,9 +104,9 @@ extraConfigMaps: {}
 extraConfigMapAutomountDir: /mnt/config
 
 # Global parameters for image transfer job. 
-globalPreSync: 
+#globalPreSync: 
   # Specify whether true or false to consider this as a argocd presync event.
-  enabled: true
+#  enabled: true
 
 testimage:
   repository: docker://kplogesh/busybox
