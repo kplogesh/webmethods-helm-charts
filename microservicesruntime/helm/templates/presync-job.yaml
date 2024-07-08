@@ -110,8 +110,6 @@ spec:
             echo $IMAGE_NAME $IMAGE_TAG
 
             skopeo copy \
-            --src-creds $(SRC_USERNAME):$(SRC_PASSWORD) \
-            --dest-creds $(DEST_USERNAME):$(DEST_PASSWORD) \
             $(SRC_REGISTRY_HOST)/$IMAGE_NAME:$IMAGE_TAG \
             $DEST_REGISTRY:$IMAGE_TAG
         {{- with $job.resources }}
