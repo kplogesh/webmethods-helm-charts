@@ -106,7 +106,7 @@ spec:
             echo "DEST Registry is : $DEST_REGISTRY"
             IMAGE_NAME=$(basename $DEST_REGISTRY)
             IMAGE_TAG={{ $context.Values.testimage.tag }}
-
+            # Comment
             echo $IMAGE_NAME $IMAGE_TAG
 
             skopeo copy \
