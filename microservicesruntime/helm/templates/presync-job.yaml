@@ -22,11 +22,11 @@
 {{- $imagePullSecrets := .Values.imagePullSecrets -}}
 {{- $extraLabels      := .Values.extraLabels      -}}
 # Initialize the variable with a default value
-{{- $globalArgoPreSyncEnabled := false }}
+{{- $globalPreSyncEnabled := false }}
 
 # Check if .Values.argoPreSync exists and update the variable
-{{- if .Values.argoPreSync }}
-  {{- $globalArgoPreSyncEnabled = default false (pluck "enabled" .Values.argoPreSync | first) }}
+{{- if .Values.globalPreSync }}
+  {{- $globalPreSyncEnabled = default false (pluck "enabled" .Values.globalPreSync | first) }}
 {{- end }}
 
 {{- $context := . }}
@@ -34,7 +34,7 @@
 {{- range $job := .Values.preSyncJobs }}
 # If argoPreSync.enabled is true and job.isImageSyncTask is explicitly set to true, the job is created.
 # If job.isImageSyncTask is not set (i.e., does not exist) or is explicitly set to false, the job is created regardless of the global argoPreSync parameter.
-{{- if or (and $globalArgoPreSyncEnabled (hasKey $job "isImageSyncTask") $job.isImageSyncTask) (not (hasKey $job "isImageSyncTask")) (not $job.isImageSyncTask) }}
+{{- if or (and $globalPreSyncEnabled (hasKey $job "isImageSyncTask") $job.isImageSyncTask) (not (hasKey $job "isImageSyncTask")) (not $job.isImageSyncTask) }}
 ---
 apiVersion: batch/v1
 kind: Job

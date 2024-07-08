@@ -104,9 +104,9 @@ extraConfigMaps: {}
 extraConfigMapAutomountDir: /mnt/config
 
 # Global parameters for image transfer job. 
-#argoPreSync: 
+globalPreSync: 
   # Specify whether true or false to consider this as a argocd presync event.
-#  enabled: false
+  enabled: false
 
 testimage:
   repository: docker://kplogesh/busybox
@@ -114,7 +114,7 @@ testimage:
 preSyncJobs:
   - name: image-transfer-to-prod-registry 
     # Specify whether it is a job meant for image transfer. If not specified, it is considered a normal job
-    isImageSyncTask: true
+    isImageSyncTask: false
     env:
       - name: SRC_USERNAME
         valueFrom:
