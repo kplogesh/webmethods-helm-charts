@@ -32,8 +32,7 @@
 {{- $context := . }}
 
 {{- range $job := .Values.preSyncJobs }}
-# If argoPreSync.enabled is true and job.isImageSyncTask is explicitly set to true, the job is created.
-# If job.isImageSyncTask is not set (i.e., does not exist) or is explicitly set to false, the job is created regardless of the global argoPreSync parameter.
+# If argoPreSync.enabled is true , the job is created.
 {{- if $globalPreSyncEnabled }}
 ---
 apiVersion: batch/v1
