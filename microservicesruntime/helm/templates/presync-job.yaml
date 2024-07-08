@@ -24,7 +24,7 @@
 # Initialize the variable with a default value
 {{- $globalPreSyncEnabled := false }}
 
-# Check if .Values.argoPreSync exists and update the variable
+# Check if argoPreSync exists and update the variable
 {{- if .Values.globalPreSync }}
   {{- $globalPreSyncEnabled = default false (pluck "enabled" .Values.globalPreSync | first) }}
 {{- end }}
