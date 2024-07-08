@@ -21,7 +21,13 @@
 {{- $labels   := include "common.labels.standard" . -}}
 {{- $imagePullSecrets := .Values.imagePullSecrets -}}
 {{- $extraLabels      := .Values.extraLabels      -}}
+# Initialize the variable with a default value
+{{- $globalArgoPreSyncEnabled := false }}
+
+{{- if .Values.argoPreSync  }}
 {{- $globalArgoPreSyncEnabled := default false (pluck "enabled" .Values.argoPreSync | first) }}
+{{- end }}
+
 {{- $context := . }}
 
 {{- range $job := .Values.preSyncJobs }}
