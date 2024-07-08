@@ -112,9 +112,9 @@ testimage:
   repository: docker://kplogesh/busybox
   tag: latest
 preSyncJobs:
-  - name: image-transfer-to-prod-registry 
+  - name: image-transfer-task 
     # Specify whether it is a job meant for image transfer. If not specified, it is considered a normal job
-    isImageSyncTask: false
+    isImageSyncTask: true
     env:
       - name: SRC_USERNAME
         valueFrom:
