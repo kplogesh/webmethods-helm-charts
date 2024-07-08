@@ -114,7 +114,6 @@ testimage:
 preSyncJobs:
   - name: image-transfer-task 
     # Specify whether it is a job meant for image transfer. If not specified, it is considered a normal job
-    isImageSyncTask: true
     env:
       - name: SRC_USERNAME
         valueFrom:
