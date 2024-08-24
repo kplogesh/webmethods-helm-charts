@@ -1,5 +1,5 @@
 extraConfigMaps:
-  msr-microservicesruntime:
+  microservicesruntime-license-key:
     automount: false
     data:
       licensekey:
