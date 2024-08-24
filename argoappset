@@ -16,7 +16,7 @@ spec:
             - 3-values.yaml
   template:
     metadata:
-      name: '{{.cluster}}-deployment'
+      name: '{{ .cluster }}-deployment'
     spec:
       project: "default"
       source:
@@ -25,7 +25,7 @@ spec:
         path: microservicesruntime/helm
       destination:
         server: '{{.url}}'
-        namespace: {{.cluster}}
+        namespace: '{{ .cluster }}'
   templatePatch: |
     spec:
       source:
