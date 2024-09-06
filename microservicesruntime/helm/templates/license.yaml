@@ -34,7 +34,7 @@ data:
   licensekey:
     {{ .Values.license | nindent 4 }}
   {{- if .Values.entirexlicense }}
-  entirexlicensekey:
-    {{ .Values.entirexlicense | nindent 4 }}
+  terracotta-license.key:
+    {{ .Values.terracottalicense | nindent 4 }}
   {{- end}}
 {{- end }}

@@ -138,9 +138,9 @@ spec:
               mountPath: {{ .Values.microservicesruntime.installDir }}/licenseKey.xml
               subPath:   licenseKey.xml
               readOnly:  true
-            - name: entirex-license
-              mountPath: {{ .Values.microservicesruntime.installDir }}/config/license.entirex.xml
-              subPath:   license.entirex.xml
+            - name: terracotta-license
+              mountPath: {{ .Values.microservicesruntime.installDir }}/common/conf/terracotta-license.key
+              subPath:   terracotta-license.key
               readOnly:  true
             - name: application-properties
               mountPath: {{ .Values.microservicesruntime.installDir }}/application.properties
@@ -221,13 +221,13 @@ spec:
             items:
             - key:  licensekey
               path: licenseKey.xml
-        - name: entirex-license
+        - name: terracotta-license
           configMap:
             name: {{ include "microservicesruntime.licenseConfigMapName" . }}
             defaultMode: 0666
             items:
-            - key:  entirexlicensekey
-              path: license.entirex.xml
+            - key:  terracotta-license.key
+              path: terracotta-license.key
         - name: application-properties
           configMap:
             name: {{ include "common.names.fullname" . }}
