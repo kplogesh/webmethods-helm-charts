@@ -31,10 +31,10 @@ metadata:
   annotations:
     helm.sh/resource-policy: keep
 data:
-  licensekey:
+  licensekey: |-
     {{ .Values.license | nindent 4 }}
   {{- if .Values.terracottalicense }}
-  terracotta-license.key:
+  terracotta-license.key: |-
     {{ .Values.terracottalicense | nindent 4 }}
   {{- end}}
 {{- end }}
