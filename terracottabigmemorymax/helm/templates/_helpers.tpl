@@ -1,5 +1,3 @@
-{{ if .Values.license }}
----
 # /*
 #  * Copyright (c) 2021 Software AG, Darmstadt, Germany and/or its licensors
 #  *
@@ -18,23 +16,4 @@
 #  *   limitations under the License.
 #  *
 #  */
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "microservicesruntime.licenseConfigMapName"  . }}
-  labels:  
-    {{- include "common.labels.standard" . | nindent 4 }}
-    {{- with .Values.extraLabels -}}
-    {{ toYaml . | nindent 4 }}
-    {{- end }}
-  annotations:
-    helm.sh/resource-policy: keep
-data:
-  licensekey: |-
-    {{ .Values.license | nindent 4 }}
-  {{- if .Values.terracotta.license }}
-  terracotta-license.key: |-
-    {{ .Values.terracotta.license | nindent 4 }}
-  {{- end}}
-{{- end }}
+{{/* vim: set filetype=mustache: */}}

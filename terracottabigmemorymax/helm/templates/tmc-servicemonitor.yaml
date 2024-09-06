@@ -1,7 +1,5 @@
-{{ if .Values.license }}
----
 # /*
-#  * Copyright (c) 2021 Software AG, Darmstadt, Germany and/or its licensors
+#  * Copyright (c) 2024 Software AG, Darmstadt, Germany and/or its licensors
 #  *
 #  * SPDX-License-Identifier: Apache-2.0
 #  *
@@ -18,23 +16,30 @@
 #  *   limitations under the License.
 #  *
 #  */
-
-apiVersion: v1
-kind: ConfigMap
+{{- if eq .Values.serviceMonitor.enabled true }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
 metadata:
-  name: {{ include "microservicesruntime.licenseConfigMapName"  . }}
-  labels:  
+  name: tmc-servicemonitor
+  namespace: {{ .Release.Namespace }}
+  labels:
     {{- include "common.labels.standard" . | nindent 4 }}
-    {{- with .Values.extraLabels -}}
-    {{ toYaml . | nindent 4 }}
-    {{- end }}
-  annotations:
-    helm.sh/resource-policy: keep
-data:
-  licensekey: |-
-    {{ .Values.license | nindent 4 }}
-  {{- if .Values.terracotta.license }}
-  terracotta-license.key: |-
-    {{ .Values.terracotta.license | nindent 4 }}
-  {{- end}}
+    app: tmc
+spec:
+  endpoints:
+  - honorLabels: true
+    interval: {{ .Values.prometheus.interval }}
+    path: {{ .Values.prometheus.path }}
+    port: managementport
+    scheme: "http"
+    scrapeTimeout: {{ .Values.prometheus.scrapeTimeout }}
+    tlsConfig:
+      insecureSkipVerify: true
+  jobLabel: {{ .Release.Name }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      app: tmc
 {{- end }}
