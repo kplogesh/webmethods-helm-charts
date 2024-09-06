@@ -14,6 +14,20 @@ image:
   # -- The default value pulls latest. In PROD it is recommended to use a specific fix level.
   tag:        "10.15"
 
+# For grace termination period in seconds
+terminationGracePeriodSeconds: 30
+
+# Number of revisions to be retained
+revisionHistoryLimit: 3
+
+# Global parameters for image transfer job. 
+#globalPreSync: 
+  # Specify whether true or false to consider this as a argocd presync event.
+  #enabled: false
+  
+# Add the presync jobs here
+#preSyncJobs:
+
 # -- Image pull secret reference. By default looks for `regcred`.
 imagePullSecrets: 
   - name: regcred
@@ -42,6 +56,71 @@ extraEnvs: []
 # -- Extra Ports to be defined, note: these ports need to be created 
 extraPorts: []
 
+# -- Extra persistent volumes to be deployed with the release.
+# Ensure that the PersistentVolume 'name' has a unique name (e.g. by using the Release Namespace)
+# Example: 
+# pv-integration-msr:
+#   name: pv-integration-msr-{{ .Release.Namespace }}
+#   storageClassName: ""
+#   accessModes:
+#   - ReadWriteMany
+#   capacity:
+#     storage: 500Gi
+#   mountOptions:
+#   - nfsvers=4.0
+#   - sec=sys
+#   nfs:
+#     path: /uniqa_wms_bpm_cfgt
+#     server: atrfs238.prod01.r-dc.net
+#   persistentVolumeReclaimPolicy: Retain
+#   volumeMode: Filesystem
+extraPersistentVolumes: {}
+
+# -- Extra PersistentVolumeClaims to be created with the release
+# Example: 
+# pvc-integration-msr:
+#   accessModes:
+#   - ReadWriteMany
+#   resources:
+#     requests:
+#       storage: 500Gi
+#   storageClassName: ""
+#   volumeMode: Filesystem
+#   volumeName: pv-integration-msr-{{ .Release.Namespace }}
+# 
+# Reference the extra PVC as follows:
+# extraVolumes:
+# - name: data
+#   persistentVolumeClaim:
+#     claimName: pvc-integration-msr
+# 
+# Mount the volume:
+# extraVolumeMounts:
+# - mountPath: /mnt/data
+#   name: data
+# 
+# Ensure that the correct security context is set 
+# if required by NFS or the like, this will usually vary between environments
+# securityContext:
+#   runAsGroup: 666
+#   runAsUser: 50302
+extraPersistentVolumeClaims: {}
+
+# -- Extra Role Bindings
+# Example: 
+# nas-binding: 
+#   name: msr-nas-{{ .Release.Namespace }}
+#   kind: ClusterRoleBinding
+#   roleRef:
+#     apiGroup: rbac.authorization.k8s.io
+#     kind: ClusterRole
+#     name: system:openshift:scc:scc-uits-integration-msr-nas
+#   subjects:
+#   - kind: ServiceAccount
+#     name: default
+#     namespace: "{{ .Release.Namespace }}"
+extraRoleBindings: {}
+
 # -- Secret mounts, A list of secrets and their paths to mount inside the pod
 secretMounts: []
 #  - name: default-secrets
@@ -55,10 +134,23 @@ secretVolumes: []
 #   secretName: msr-secrets
 
 # -- Extra volume mounts
-extraVolumeMounts: []
+# Excepts an array or named table for backward compatibility. 
+# Table usage will allow splitting up volume mounts into multiple values files, 
+# thus allowing defaults .
+# 
+# extraVolumeMounts:
+#  somename: 
+#   - name: extras
+#     mountPath: /usr/share/extras
+#     readOnly: true
+#  
+# or array (old):
+#
+# extraVolumeMounts:
 # - name: extras
 #   mountPath: /usr/share/extras
 #   readOnly: true
+extraVolumeMounts: {}
 
 # -- Volume Claim Templates, only to be used when running as a Statefulset (e.g. using client-side queuing)
 volumeClaimTemplates: []
@@ -97,59 +189,14 @@ extraInitContainers: []
 #       blax: blu
 #     second.csv:
 #       sippi: dadu
-
 extraConfigMaps: {}
+
+# Similar config for untracked that is not included in hashing for automated deplyment restarts
+opsExtraConfigMaps: {}
+opsAutomountDir: /tmp/operations-config
  
 # -- The default mount directory for extra config maps if automount is set in the extraConfig
 extraConfigMapAutomountDir: /mnt/config
-
-# Global parameters for image transfer job. 
-#globalPreSync: 
-  # Specify whether true or false to consider this as a argocd presync event.
-#  enabled: true
-
-#testimage:
-#  repository: docker://kplogesh/busybox
-#  tag: latest
-#preSyncJobs:
-#  - name: image-transfer-task 
-#    # Specify whether it is a job meant for image transfer. If not specified, it is considered a normal job
-#    env:
-#      - name: SRC_USERNAME
-#        valueFrom:
-#          secretKeyRef:
-#            name: source-registry-credentials
-#            key: username
-#      - name: SRC_PASSWORD
-#        valueFrom:
-#          secretKeyRef:
-#            name: source-registry-credentials
-#            key: password
-#      - name: DEST_USERNAME
-#        valueFrom:
-#          secretKeyRef:
-#            name: local-registry-credentials
-#            key: username
-#      - name: DEST_PASSWORD
-#        valueFrom:
-#          secretKeyRef:
-#            name: local-registry-credentials
-#            key: password
-#      - name: SRC_REGISTRY_HOST
-#        valueFrom:
-#          secretKeyRef:
-#            name: source-registry-credentials
-#            key: registry-host
-#    backoffLimit: 1
-#    activeDeadlineSeconds: 60
-#    restartPolicy: Never
-#    annotations:
-#      argocd.argoproj.io/hook: PreSync
-#      argocd.argoproj.io/hook-delete-policy: HookSucceeded
-#    image:
-#      repository: "quay.io/containers/skopeo"
-#      imagePullPolicy: IfNotPresent
-#      tag: "latest"
 
 # -- Secret configurations required for MSR and Solution.
 # The key will used as the secret name. You can use automount: true
@@ -165,9 +212,11 @@ extraConfigMapAutomountDir: /mnt/config
 #     data:
 #       param1: param1value
 #       param2: param2value
+secrets: {}
 
 # -- The default mount directory for secret if automount is set in the secrets
 secretAutomountDir: /etc/secrets
+
 
 # -- Extra command, which is executed before the startContainer entrypoint script of the Microservice Runtime
 extraCommand: ""
@@ -198,21 +247,30 @@ readinessProbe:
   successThreshold: 1
   timeoutSeconds: 1
 
+# -- liveness probe for container
+livenessProbe:
+  httpGet:
+    path: /health/liveness
+    port: http
+    scheme: HTTP
+  failureThreshold: 3
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  successThreshold: 1
+  timeoutSeconds: 10  
+
 # -- startup probe for container
 startupProbe:
   tcpSocket:
     port: http
   failureThreshold: 60
-  periodSeconds: 30            # wait 10 * 60 seconds for starting readinessProbe and livenessProbe
+  periodSeconds: 30            # wait 30 * 60 seconds for starting readinessProbe and livenessProbe
+  initialDelaySeconds: 60
+  timeoutSeconds: 10
 
-# Define the msr license
-license:
-
-# Define the entirex license
-entirexlicense:
-  
-# -- Defines the checksum parameter to control the deployment restarts based on the configuration updates. 
+# If auto provision of pod is required on config change, enable this parameter. It checks configmap.yaml, configmaps-extra.yaml and secret.yaml
 # checksum: true
+
 microservicesruntime:
   # -- Defines external runtime port
   httpsPort:                5556
@@ -235,9 +293,14 @@ microservicesruntime:
     min:                    "512M"
     # -- Maximum of heap memory
     max:                    "512M"
+
   # -- Defines installation folder which was using on image creation
   installDir:      /opt/softwareag/IntegrationServer # This is the installation directory which you use on creating the image
-  configDir: /opt/softwareag/IntegrationServer/AppConfig # This is the configuration directory which you use to place the multiple application properties files
+  # -- This is the configuration directory which you use to place the multiple application properties files. Use this path to provide properties which should override values. The path is the last path in the property value chain and overrides all other values.
+  configDir: /opt/softwareag/IntegrationServer/msr-config 
+  # -- This is the configuration directory for base configurations which you use to place the multiple application properties files. The path is used before all other pathes. Use this in your base image to provide defaults.
+  baseConfigDir: /opt/softwareag/IntegrationServer/base-config 
+
   # -- List of application properties which are added into config map in YAML format. See [Integration Server Configuration Variables](https://documentation.softwareag.com/webmethods/integration_server/pie10-15/webhelp/pie-webhelp/index.html#page/pie-webhelp%2Fre-configuration_variables_assets.html)
   properties: {}
   # -- Use "flat" application properties file as generated by configuration variable templates. Note: "properties" takes precedence over the propertiesFile values. Template function, 
@@ -250,7 +313,6 @@ microservicesruntime:
   propertiesFile: 
     content: |
       # application properties file 
-
   # -- list of custom java opts e.g. "-Dmy.prop1=value1" "-Dmy.prop2=value2"
   javaCustomOpts:
   # example:   
@@ -425,17 +487,3 @@ metering:
   # -- The password for the metering client truststore.
   # Configure this property only if you use a truststore.
   trustStorePassword:
-# Provide the secrets required for the container. Currently supported for Secret and SealedSecret.
-secrets: []
-# Example. Each of the array elements will create a new secret. 
-#  - name: msr-secrets
-#    kind: Secret 
-#    type: Opaque
-#    data: # Do not provide plain passwords. For MSR, use the password encryption mechanism and feed the encrypted password here
-#      param1: param-value
-#      param2: param-value # Add more parameter as required
-#  - name: interface-secrets
-#    kind: SealedSecret
-#    data: # Do not provide plain passwords. Provide the sealed information here.
-#      param1: param-value
-#      param2: param-value

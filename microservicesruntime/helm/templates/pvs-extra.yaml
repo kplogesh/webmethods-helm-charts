@@ -1,7 +1,7 @@
-{{ if .Values.license }}
+{{ range $name, $pv := .Values.extraPersistentVolumes }}
 ---
 # /*
-#  * Copyright (c) 2021 Software AG, Darmstadt, Germany and/or its licensors
+#  * Copyright (c) 2023 Software AG, Darmstadt, Germany and/or its licensors
 #  *
 #  * SPDX-License-Identifier: Apache-2.0
 #  *
@@ -18,19 +18,17 @@
 #  *   limitations under the License.
 #  *
 #  */
-
 apiVersion: v1
-kind: ConfigMap
+kind: PersistentVolume
 metadata:
-  name: {{ .Values.licenseConfigMap }}
-  labels:  
-    {{- include "common.labels.standard" . | nindent 4 }}
-    {{- with .Values.extraLabels -}}
+  name: {{ tpl $pv.name $ }}
+  labels:
+    {{- include "common.labels.standard" $ | nindent 4 }}
+    {{- with $.Values.extraLabels }}
     {{ toYaml . | nindent 4 }}
     {{- end }}
-  annotations:
-    helm.sh/resource-policy: keep
-data:
-  licence.xml:
-    {{ .Values.license | toYaml | nindent 4 }}
+spec:
+  {{- $valuesWithoutName := omit $pv "name" }}
+  {{- toYaml $valuesWithoutName | nindent 2 }}
 {{- end }}
+  

@@ -33,6 +33,7 @@ spec:
   {{- if .Values.statefulSet }}
   serviceName: {{ .Values.serviceName | default (printf "msr-%s" (.Release.Name) ) }}
   {{- end }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   selector:
     matchLabels:
       {{- include "common.labels.matchLabels" . | nindent 6 }}
@@ -61,6 +62,7 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
         {{- toYaml .Values.extraInitContainers | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       containers:
         - name: {{ .Values.containerName | default (printf "msr-%s" (.Release.Name) )}}
           securityContext:
@@ -78,7 +80,7 @@ spec:
           - name: SAG_IS_LICENSE_FILE
             value: {{ .Values.microservicesruntime.installDir }}/licenseKey.xml
           - name: SAG_IS_CONFIG_PROPERTIES
-            value: "{{ .Values.microservicesruntime.installDir }}/applicationFile.properties,{{ .Values.microservicesruntime.installDir }}/application.properties,{{ .Values.microservicesruntime.configDir}}"
+            value: "{{ .Values.microservicesruntime.baseConfigDir }},{{ .Values.microservicesruntime.installDir }}/applicationFile.properties,{{ .Values.microservicesruntime.installDir }}/application.properties,{{ .Values.microservicesruntime.configDir}}"
           {{- if .Values.persistence.enabled }}
           - name: HOST_DIR
             value: {{ .Values.microservicesruntime.installDir }}/pv
@@ -92,9 +94,20 @@ spec:
             value: "{{ .Values.persistence.logs }}"
           {{- end }}
           {{- if .Values.microservicesruntime.javaCustomOpts }}
+          {{- $element := .Values.microservicesruntime.javaCustomOpts }}
+          {{- if eq (kindOf $element) "slice" }}
           - name: JAVA_CUSTOM_OPTS
             value: "{{ join " " .Values.microservicesruntime.javaCustomOpts }}"
+          {{ else }}
+          {{- $javaCustomOpts := list }}
+          {{- range $key, $value := $element }}
+          {{- $prop := (printf "-%s%s" $key $value) }}
+          {{- $javaCustomOpts = append $javaCustomOpts $prop }}
           {{- end }}
+          - name: JAVA_CUSTOM_OPTS
+            value: "{{ join " " $javaCustomOpts }}"
+          {{- end }}
+          {{ end }}
           {{- if .Values.extraEnvs }}
           {{- toYaml .Values.extraEnvs | nindent 10 }}
           {{- end }}
@@ -115,15 +128,7 @@ spec:
           startupProbe:
             {{- toYaml .Values.startupProbe | nindent 12 }}
           livenessProbe:
-            httpGet:
-              path: /health/liveness
-              port: http
-              scheme: {{ .Values.microservicesruntime.readinessProbe.scheme }} 
-            failureThreshold: 3
-            initialDelaySeconds: {{ .Values.microservicesruntime.initialDelaySeconds }}
-            periodSeconds: 30
-            successThreshold: 1
-            timeoutSeconds: 1            
+            {{- toYaml .Values.livenessProbe | nindent 12 }}           
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
@@ -132,6 +137,10 @@ spec:
             - name: microservicesruntime-license
               mountPath: {{ .Values.microservicesruntime.installDir }}/licenseKey.xml
               subPath:   licenseKey.xml
+              readOnly:  true
+            - name: entirex-license
+              mountPath: {{ .Values.microservicesruntime.installDir }}/config/license.entirex.xml
+              subPath:   license.entirex.xml
               readOnly:  true
             - name: application-properties
               mountPath: {{ .Values.microservicesruntime.installDir }}/application.properties
@@ -148,9 +157,13 @@ spec:
             {{- end }}
             {{- if .Values.extraVolumeMounts }}
             {{- if eq "string" (printf "%T" .Values.extraVolumeMounts) }}
-              {{- tpl .Values.extraVolumeMounts . | nindent 12 }}              
-            {{- else }}
+              {{- tpl .Values.extraVolumeMounts . | nindent 12 }}
+            {{- else if eq (kindOf .Values.extraVolumeMounts) "slice" }}
               {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+            {{- else }}
+            {{- range $key, $vol := .Values.extraVolumeMounts }}
+              {{- toYaml $vol | nindent 12 }}
+            {{- end }}
             {{- end }}
             {{- end }}
             {{- if .Values.extraConfigMaps }}
@@ -172,14 +185,11 @@ spec:
             {{- end }}
             {{- end }}
             {{- end }}    
-            # Secrets automount feature
             {{- if .Values.secrets }}
             {{- range $name, $map := .Values.secrets }}
             {{- if $map.automount }} 
-            {{- if $map.data }}
             - name: {{ $name }}
               mountPath: {{ default $.Values.secretAutomountDir $map.automountDir }}
-            {{- end }}
             {{- end }}
             {{- end }}
             {{- end }}
@@ -190,10 +200,10 @@ spec:
               subPath: {{ .subPath }}
               {{- end }}
             {{- end }}
-            {{- if .Values.lifecycle }}
-            lifecycle:
-            {{ toYaml .Values.lifecycle | indent 10 }}
-            {{- end }}
+          {{- if .Values.lifecycle }}
+          lifecycle:
+{{ toYaml .Values.lifecycle | indent 12 }}
+          {{- end }}
         {{- include "common.containers.extraContainers" . | nindent 8 }}
       volumes:
         {{- range .Values.secretVolumes }}
@@ -211,6 +221,13 @@ spec:
             items:
             - key:  licensekey
               path: licenseKey.xml
+        - name: entirex-license
+          configMap:
+            name: {{ include "microservicesruntime.licenseConfigMapName" . }}
+            defaultMode: 0666
+            items:
+            - key:  entirexlicensekey
+              path: license.entirex.xml
         - name: application-properties
           configMap:
             name: {{ include "common.names.fullname" . }}
@@ -229,13 +246,14 @@ spec:
             claimName: {{ .Values.persistence.existingClaim | default (include "common.names.fullname" .) }}
         {{- end }}
         {{- if .Values.extraVolumes }}
-        # Currently some extra blocks accept strings
-        # to continue with backwards compatibility this is being kept
-        # whilst also allowing for yaml to be specified too.
         {{- if eq "string" (printf "%T" .Values.extraVolumes) }}
           {{ tpl .Values.extraVolumes . | nindent 8 }}
+        {{- else if eq (kindOf .Values.extraVolumes) "slice" }}
+          {{- toYaml .Values.extraVolumes | nindent 8 }}
         {{- else }}
-          {{ toYaml .Values.extraVolumes | nindent 8 }}
+          {{- range $key, $vol := .Values.extraVolumes }}
+            {{- toYaml $vol | nindent 8 }}
+          {{- end }}
         {{- end }}
         {{- end }}
         {{- if .Values.extraConfigMaps }}
@@ -245,6 +263,9 @@ spec:
         - name: {{ $name }}
           configMap:
             name: {{ $name }}
+            {{- if $map.defaultMode }}
+            defaultMode: {{ $map.defaultMode }}
+            {{- end }}
         {{- end }}
         {{- end }}
         {{- end }}        
@@ -274,4 +295,3 @@ spec:
   volumeClaimTemplates:
   {{- toYaml .Values.volumeClaimTemplates | nindent 2 }}
   {{- end }}
-  

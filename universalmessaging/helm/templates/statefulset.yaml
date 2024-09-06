@@ -156,10 +156,26 @@ spec:
           {{ toYaml .Values.lifecycle | indent 10 }}
           {{- end }}          
           startupProbe:
-            {{- toYaml .Values.startupProbe | nindent 12 }}
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
           livenessProbe:
+            exec:
+              command:
+              - runUMTool.sh
+              - GetServerTime
+              - -rname=nsp://localhost:9000
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
+            exec:
+              command:
+              - runUMTool.sh
+              - GetServerTime
+              - -rname=nsp://localhost:9000
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

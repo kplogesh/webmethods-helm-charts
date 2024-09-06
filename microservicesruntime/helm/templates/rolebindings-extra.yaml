@@ -1,7 +1,7 @@
-{{ if .Values.license }}
+{{ range $name, $rb := .Values.extraRoleBindings }}
 ---
 # /*
-#  * Copyright (c) 2021 Software AG, Darmstadt, Germany and/or its licensors
+#  * Copyright (c) 2023 Software AG, Darmstadt, Germany and/or its licensors
 #  *
 #  * SPDX-License-Identifier: Apache-2.0
 #  *
@@ -18,23 +18,26 @@
 #  *   limitations under the License.
 #  *
 #  */
-
-apiVersion: v1
-kind: ConfigMap
+apiVersion: rbac.authorization.k8s.io/v1
+kind: {{ $rb.kind }}
 metadata:
-  name: {{ include "microservicesruntime.licenseConfigMapName"  . }}
-  labels:  
-    {{- include "common.labels.standard" . | nindent 4 }}
-    {{- with .Values.extraLabels -}}
+  name: {{ tpl $rb.name $ }}
+  labels:
+    {{- include "common.labels.standard" $ | nindent 4 }}
+    {{- with $.Values.extraLabels }}
     {{ toYaml . | nindent 4 }}
     {{- end }}
-  annotations:
-    helm.sh/resource-policy: keep
-data:
-  licensekey:
-    {{ .Values.license | nindent 4 }}
-  {{- if .Values.entirexlicense }}
-  entirexlicensekey:
-    {{ .Values.entirexlicense | nindent 4 }}
-  {{- end}}
+roleRef:
+  {{- toYaml $rb.roleRef | nindent 2 }}
+subjects:
+  {{- range $rb.subjects }}
+  - kind: {{ .kind }}
+    name: {{ .name }}
+    {{- if .namespace }}
+    namespace: {{ tpl .namespace $ }}
+    {{- end }}
+    {{- if .apiGroup }}
+    apiGroup: {{ .apiGroup }}
+    {{- end }}
+  {{- end }}
 {{- end }}

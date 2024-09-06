@@ -24,7 +24,7 @@
 # Initialize the variable with a default value
 {{- $globalPreSyncEnabled := false }}
 
-# Check if argoPreSync exists and update the variable
+# Set globalPreSync as per its existence
 {{- if .Values.globalPreSync }}
   {{- $globalPreSyncEnabled = default false (pluck "enabled" .Values.globalPreSync | first) }}
 {{- end }}
@@ -32,7 +32,7 @@
 {{- $context := . }}
 
 {{- range $job := .Values.preSyncJobs }}
-# If argoPreSync.enabled is true , the job is created.
+# If argoPreSync.enabled is true and job.isImageSyncTask is explicitly set to true, the job is created.
 {{- if $globalPreSyncEnabled }}
 ---
 apiVersion: batch/v1
@@ -102,16 +102,39 @@ spec:
         args:
           - "-c"
           - |
-            DEST_REGISTRY=$(echo {{ $context.Values.testimage.repository }} | sed 's|/*$||')
-            echo "DEST Registry is : $DEST_REGISTRY"
-            IMAGE_NAME=$(basename $DEST_REGISTRY)
-            IMAGE_TAG={{ $context.Values.testimage.tag }}
-            # Comment
-            echo $IMAGE_NAME $IMAGE_TAG
+            # Note: Source image and target image registries will be referenced from globals. 
+            # Note: Specific image name will be referenced from service specific configurations.
 
+            # Remove the / at the end of source and destination registries
+            IMAGE_REPOSITORY=$(echo {{ $context.Values.image.repository }} | sed 's|/*$||')
+
+            # Reference source image registry host
+            SRC_REGISTRY_HOST=$(echo {{ $job.srcRepo }} | sed 's|/*$||')
+            
+            # Reference destination image registry host 
+            DEST_REGISTRY_HOST=$(echo {{ $job.destRepo }} | sed 's|/*$||')
+
+            # Get the basename to identify the service (solution)
+            IMAGE_NAME=$(basename $IMAGE_REPOSITORY)
+
+            # Get the image tag to reference during the copy of image.
+            IMAGE_TAG={{ $context.Values.image.tag }}
+
+            echo "Source registry is $SRC_REGISTRY_HOST/$IMAGE_NAME:$IMAGE_TAG"
+            echo "Destination registry is $DEST_REGISTRY_HOST/$IMAGE_NAME:$IMAGE_TAG"
+
+            # Initiate the skopeo image transfer command
+            echo "Initiating Skopeo Image Transfer Task..."
+            
             skopeo copy \
-            $(SRC_REGISTRY_HOST)/$IMAGE_NAME:$IMAGE_TAG \
-            $DEST_REGISTRY:$IMAGE_TAG
+            --src-tls-verify=false \
+            --dest-tls-verify=false \
+            --src-creds $(SRC_REG_USERNAME):$(SRC_REG_PASSWORD) \
+            --dest-creds $(DEST_REG_USERNAME):$(DEST_REG_PASSWORD) \
+            docker://$SRC_REGISTRY_HOST/$IMAGE_NAME:$IMAGE_TAG \
+            docker://$DEST_REGISTRY_HOST/$IMAGE_NAME:$IMAGE_TAG
+
+            echo "Image transfer complted..!"
         {{- with $job.resources }}
         resources:
 {{ toYaml . | indent 10 }}
@@ -144,3 +167,4 @@ spec:
 
 {{- end }}
 {{- end -}}
+

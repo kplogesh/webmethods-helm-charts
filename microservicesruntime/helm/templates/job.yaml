@@ -21,11 +21,12 @@
 {{- $labels   := include "common.labels.standard" . -}}
 {{- $imagePullSecrets := .Values.imagePullSecrets -}}
 {{- $extraLabels      := .Values.extraLabels      -}}
+{{- $opsExtraConfigMaps := .Values.opsExtraConfigMaps -}}
+{{- $opsAutomountDir := .Values.opsAutomountDir -}}
+
 {{- $context := . }}
 
 {{- range $job := .Values.jobs }}
-# If argoPreSync.enabled is true and job.isImageSyncTask is explicitly set to true, the job is created.
-# If job.isImageSyncTask is not set (i.e., does not exist) or is explicitly set to false, the job is created regardless of the global argoPreSync parameter.
 ---
 apiVersion: batch/v1
 kind: {{ if $job.schedule }}CronJob{{ else }}Job{{ end }}
@@ -50,6 +51,9 @@ spec:
       {{- if hasKey $job "activeDeadlineSeconds" }}
       activeDeadlineSeconds: {{ $job.activeDeadlineSeconds }}
       {{- end }}
+      {{- if hasKey $job "ttlSecondsAfterFinished" }}
+      ttlSecondsAfterFinished: {{ $job.ttlSecondsAfterFinished }}
+      {{- end }} 
       template:
         metadata:
           name: {{ $fullName }}-{{ $job.name }}
@@ -92,9 +96,10 @@ spec:
             {{- with $job.envFrom }}
             envFrom:
 {{ toYaml . | indent 12 }}
-            {{- end }}
+            {{- end }}          
             {{- if $job.command }}
-            command: {{ $job.command }}
+            command: 
+            {{- toYaml $job.command | nindent 14 }}
             {{- end }}
             {{- with $job.args }}
             args:
@@ -104,9 +109,32 @@ spec:
             resources:
 {{ toYaml . | indent 14 }}
             {{- end }}
-            {{- with $job.volumeMounts }}
+            {{- with or $job.volumeMounts $opsExtraConfigMaps }}
             volumeMounts:
+{{- if $job.volumes }}
 {{ toYaml . | indent 12 }}
+{{- end }}
+            {{- if $job.isOperationsSpecific }}
+            {{- if $opsExtraConfigMaps }}
+            {{- range $name, $map := $opsExtraConfigMaps }}
+            {{- if $map.automount }}            
+            {{- if $map.binaryData }}              
+            {{- range $key, $val := $map.binaryData }}
+            - name: {{ $name }}
+              mountPath: {{ default $opsAutomountDir $map.automountDir }}/{{ $key }}
+              subPath: {{ $key }}
+            {{- end }}
+            {{- else }}
+            {{- range $key, $val := $map.data }}
+            - name: {{ $name }}
+              mountPath: {{ $map.automountDir }}/{{ $key }}
+              subPath: {{ $key }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- end }}  
+            {{- end }}
             {{- end }}
           {{- with $job.nodeSelector }}
           nodeSelector:
@@ -121,9 +149,25 @@ spec:
 {{ toYaml . | indent 12 }}
           {{- end }}
           restartPolicy: {{ $job.restartPolicy }}
-          {{- with $job.volumes }}
+          {{- with or $job.volumes $opsExtraConfigMaps }}
           volumes:
+{{- if $job.volumes }}
 {{ toYaml . | indent 12 }}
+{{- end }}
+            {{- if $job.isOperationsSpecific }}
+            {{- if $opsExtraConfigMaps }}
+            {{- range $name, $map := $opsExtraConfigMaps }}
+            {{- if $map.automount }}                    
+            - name: {{ $name }}
+              configMap:
+                name: {{ $name }}
+                {{- if $map.defaultMode }}
+                defaultMode: {{ $map.defaultMode }}
+                {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- end }}  
+            {{- end }}
           {{- end }}
           {{- with $imagePullSecrets }}
           imagePullSecrets:
@@ -131,8 +175,18 @@ spec:
           {{- end }}
   schedule: {{ $job.schedule | quote }}
   successfulJobsHistoryLimit: {{ $job.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ $job.failedJobsHistoryLimit }}
 
   {{ else }}
+  {{- if hasKey $job "backoffLimit" }}
+  backoffLimit: {{ $job.backoffLimit }}
+  {{- end }}
+  {{- if hasKey $job "activeDeadlineSeconds" }}
+  activeDeadlineSeconds: {{ $job.activeDeadlineSeconds }}
+  {{- end }}
+  {{- if hasKey $job "ttlSecondsAfterFinished" }}
+  ttlSecondsAfterFinished: {{ $job.ttlSecondsAfterFinished }}
+  {{- end }} 
   template:
     metadata:
       name: {{ $fullName }}-{{ $job.name }}
@@ -177,7 +231,8 @@ spec:
 {{ toYaml . | indent 8 }}
         {{- end }}
         {{- if $job.command }}
-        command: {{ $job.command }}
+        command: 
+        {{- toYaml $job.command | nindent 10 }}
         {{- end }}
         {{- with $job.args }}
         args:
@@ -187,9 +242,32 @@ spec:
         resources:
 {{ toYaml . | indent 10 }}
         {{- end }}
-        {{- with $job.volumeMounts }}
+        {{- with or $job.volumeMounts $opsExtraConfigMaps }}
         volumeMounts:
+{{- if $job.volumes }}
 {{ toYaml . | indent 8 }}
+{{- end }}
+        {{- if $job.isOperationsSpecific }}
+        {{- if $opsExtraConfigMaps }}
+        {{- range $name, $map := $opsExtraConfigMaps }}
+        {{- if $map.automount }}            
+        {{- if $map.binaryData }}              
+        {{- range $key, $val := $map.binaryData }}
+        - name: {{ $name }}
+          mountPath: {{ default $opsAutomountDir $map.automountDir }}/{{ $key }}
+          subPath: {{ $key }}
+        {{- end }}
+        {{- else }}
+        {{- range $key, $val := $map.data }}
+        - name: {{ $name }}
+          mountPath: {{ $map.automountDir }}/{{ $key }}
+          subPath: {{ $key }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- end }}  
+        {{- end }}
         {{- end }}
       {{- with $job.nodeSelector }}
       nodeSelector:
@@ -204,9 +282,25 @@ spec:
 {{ toYaml . | indent 8 }}
       {{- end }}
       restartPolicy: {{ $job.restartPolicy }}
-      {{- with $job.volumes }}
+      {{- with or $job.volumes $opsExtraConfigMaps }}
       volumes:
+{{- if $job.volumes }}
 {{ toYaml . | indent 8 }}
+{{- end }}
+        {{- if $job.isOperationsSpecific }}
+        {{- if $opsExtraConfigMaps }}
+        {{- range $name, $map := $opsExtraConfigMaps }}
+        {{- if $map.automount }}                    
+        - name: {{ $name }}
+          configMap:
+            name: {{ $name }}
+            {{- if $map.defaultMode }}
+            defaultMode: {{ $map.defaultMode }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- end }}  
+        {{- end }}
       {{- end }}
       {{- with $imagePullSecrets }}
       imagePullSecrets:
@@ -214,4 +308,5 @@ spec:
       {{- end }}
  
   {{ end }}
+
 {{- end -}}

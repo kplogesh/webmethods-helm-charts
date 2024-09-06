@@ -1,0 +1,48 @@
+{{ range $name, $pvc := .Values.extraPersistentVolumeClaims }}
+---
+# /*
+#  * Copyright (c) 2023 Software AG, Darmstadt, Germany and/or its licensors
+#  *
+#  * SPDX-License-Identifier: Apache-2.0
+#  *
+#  *   Licensed under the Apache License, Version 2.0 (the "License");
+#  *   you may not use this file except in compliance with the License.
+#  *   You may obtain a copy of the License at
+#  *
+#  *       http://www.apache.org/licenses/LICENSE-2.0
+#  *
+#  *   Unless required by applicable law or agreed to in writing, software
+#  *   distributed under the License is distributed on an "AS IS" BASIS,
+#  *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  *   See the License for the specific language governing permissions and
+#  *   limitations under the License.
+#  *
+#  */
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "common.labels.standard" $ | nindent 4 }}
+    {{- with $.Values.extraLabels }}
+    {{ toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- range $key, $value := $pvc }}
+    {{- if kindIs "map" $value }}
+      {{- printf "%s:" $key | nindent 2 }}
+      {{- include "common.utils.renderNestedMap" (dict "map" $value "ctx" $ "depth" 4) }}
+    {{- else if kindIs "slice" $value }}
+      {{- printf "%s:" $key | nindent 2 }}
+      {{- range $value }}
+      {{- printf "- %s" . | nindent 4 }}
+      {{- end }}
+    {{- else if kindIs "string" $value }}
+      {{- printf "%s: \"%s\"" $key (tpl $value $) | nindent 2 }}
+    {{- else if or (kindIs "bool" $value) (or (kindIs "float" $value) (kindIs "int" $value)) }}
+      {{- printf "%s: %v" $key $value | nindent 2 }}
+    {{- end }}
+  {{- end }}
+
+{{- end }}
+  

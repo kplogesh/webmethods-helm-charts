@@ -1,7 +1,7 @@
-{{ if .Values.license }}
+{{ range $name, $map := .Values.opsExtraConfigMaps }}
 ---
 # /*
-#  * Copyright (c) 2021 Software AG, Darmstadt, Germany and/or its licensors
+#  * Copyright (c) 2023 Software AG, Darmstadt, Germany and/or its licensors
 #  *
 #  * SPDX-License-Identifier: Apache-2.0
 #  *
@@ -18,23 +18,29 @@
 #  *   limitations under the License.
 #  *
 #  */
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "microservicesruntime.licenseConfigMapName"  . }}
-  labels:  
-    {{- include "common.labels.standard" . | nindent 4 }}
-    {{- with .Values.extraLabels -}}
+  name: {{ $name }}
+  labels:
+    {{- include "common.labels.standard" $ | nindent 4 }}
+    {{- with $.Values.extraLabels }}
     {{ toYaml . | nindent 4 }}
     {{- end }}
-  annotations:
-    helm.sh/resource-policy: keep
+{{- if $map.binaryData }}
+binaryData:
+  {{- range $key, $val := $map.binaryData }}
+  {{ $key }}: {{ $val | b64enc }}
+  {{- end }}
+{{- else }}
 data:
-  licensekey:
-    {{ .Values.license | nindent 4 }}
-  {{- if .Values.entirexlicense }}
-  entirexlicensekey:
-    {{ .Values.entirexlicense | nindent 4 }}
-  {{- end}}
+  {{- range $key, $val := $map.data }}
+  {{ $key }}: |-
+    {{- if kindIs "string" $val }}
+    {{- tpl $val $ | nindent 4 }}
+    {{- else }}
+    {{- toYaml $val | nindent 4 }}
+    {{- end }}
+  {{- end }}
+{{- end }}
 {{- end }}
