@@ -139,7 +139,7 @@ spec:
               subPath:   licenseKey.xml
               readOnly:  true
             - name: terracotta-license
-              mountPath: {{ .Values.microservicesruntime.installDir }}/common/conf/terracotta-license.key
+              mountPath: {{ .Values.microservicesruntime.installDir }}/../common/conf/terracotta-license.key
               subPath:   terracotta-license.key
               readOnly:  true
             - name: application-properties
