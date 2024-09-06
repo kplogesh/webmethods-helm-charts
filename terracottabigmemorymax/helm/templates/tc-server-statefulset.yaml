@@ -62,8 +62,10 @@ spec:
           volumeMounts:
             - name: commonconfig-volume
               mountPath: /opt/softwareag/config
+            {{- if .Values.isExternalStorage }}
             - name: core-store
               mountPath: /opt/softwareag/run
+            {{- end }}
           env:
             - name: JSON_LOGGING
               value: {{ $.Values.terracotta.jsonLogging | quote }}
@@ -96,6 +98,7 @@ spec:
                 - secret:
                     name: {{ required "A valid server certs is required!" $.Values.terracotta.secretName }}
                 {{- end }}
+  {{- if .Values.isExternalStorage }}
   volumeClaimTemplates:
     - metadata:
         name: core-store
@@ -104,3 +107,4 @@ spec:
         resources:
           requests:
             storage: {{ required "A valid storage request is required!" $.Values.serverStorage }}
+  {{- end }}

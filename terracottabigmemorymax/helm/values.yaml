@@ -10,6 +10,8 @@ pullPolicy: IfNotPresent
 # -- Specific version to not accidentally change production versions with newer images.
 tag: "4.4.0"
 
+isExternalStorage: false
+
 # -- Image pull secret reference. By default looks for `regcred`.
 imagePullSecrets:
   - name: ibmregcred
