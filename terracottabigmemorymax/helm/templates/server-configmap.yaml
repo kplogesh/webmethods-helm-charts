@@ -16,6 +16,7 @@
 #  *   limitations under the License.
 #  *
 #  */
+{{- $fullName := include "common.names.fullname" . -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -40,8 +41,8 @@ data:
     {{- range $i := until (int $.Values.terracotta.stripeCount) }}
         <mirror-group>
     {{- range $j := until (int $.Values.terracotta.nodeCountPerStripe) }}
-          <server host="{{ $.Release.Name }}-{{ add (mul $i $.Values.terracotta.nodeCountPerStripe) $j }}.{{ $.Release.Name }}.{{ $.Release.Namespace }}.svc.cluster.local"
-                  name="{{ $.Release.Name }}-{{ add (mul $i $.Values.terracotta.nodeCountPerStripe) $j }}.{{ $.Release.Name }}.{{ $.Release.Namespace }}.svc.cluster.local">
+          <server host="$fullName-{{ add (mul $i $.Values.terracotta.nodeCountPerStripe) $j }}.$fullName.{{ $.Release.Namespace }}.svc.cluster.local"
+                  name="$fullName-{{ add (mul $i $.Values.terracotta.nodeCountPerStripe) $j }}.$fullName.{{ $.Release.Namespace }}.svc.cluster.local">
             <tsa-port>{{ $.Values.terracotta.tsaPort }} </tsa-port>
             <tsa-group-port>{{ $.Values.terracotta.tsaGroupPort }}</tsa-group-port>
             <management-port>{{ $.Values.terracotta.tsaManagementPort }}</management-port>
