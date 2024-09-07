@@ -51,7 +51,7 @@ provided as configmap.
 Hence before running `helm install` create the configmap:
 
 ```
-kubectl create configmap apigw-license-config --from-file=licenseKey.xml=<your path to API Gateway license file>
+kubectl create configmap apigw-license-config --from-file=licensekey=<your path to API Gateway license file>
 ```
 
 Optionally you can directly provide the license file at the time of running `helm install`:
@@ -144,7 +144,31 @@ If desired you may deploy API Gateway with your own TLS key and cert. The Templa
 
 ```bash
 helm upgrade -i -f myvalues.yaml --set ingress.tls.key="$(<key.pem)" --set ingress.tls.cert="$(<cert.pem)"
-
 ```
+
+## Examples for Use-cases
+
+Sub-folder `examples` contains some *values* examples for more use-cases. To use the use-case, adapt and add the provided `values.yaml` to your values.
+
+| Use-case | Description |
+|-----|------|
+| [fluentd-sidecar](../examples/fluentd-sidecar/README.md) | Running API Gateway with Fluentd Sidecar |
+| [house-keeping-job](../examples/house-keeping-job/README.md) | Example to create house keeping job: purge transaction events  |
+
+## Version History
+
+| Version | Changes and Description |
+|-----|------|
+| `1.0.0` | Initial release |
+| `1.1.0` | Bug fixes in default values and helper functions for elastic secret names. <br> **Attention:** moved elasticsearch secret keys: <br>elasticSecretName --> elasticsearch.secretName<br>elasticSecretUserKey --> elasticsearch.secretUserKey<br>elasticSecretPasswordKey --> elasticsearch.secretPasswordKey |
+| `1.2.0` | Added Kibana TLS/SSL functionality towards Elasticsearch. Helper function aded for kibana truststore password. |
+| `1.2.1` | Added Kibana configuration field 'status.allowAnonymous' set by Values.kibana.allowAnonymousStatus. This removes errors in API Gateway log indicating that Kibana is not available. |
+| `1.2.2` | Option in `values.yaml` to create a ServiceMonitor added. |
+| `1.2.3` | Job template added to create house keeping (cron) jobs.  |
+| `1.2.4` | Added Kibana extra container configuration, set by Values.kibana.extraContainers. <br> Added ServiceMonitor matchLabel for a specific service. The service is set by .Values.serviceMonitor.serviceName defaulting to API Gateways runtime service. |
+| `1.2.5` | Added possibility to read metering truststore password by secretKeyRef. <br> Added custom logging configuration for Kibana. |
+| `1.2.6` | Fixed commons dependency to enable metering change from 1.2.5. |
+| `1.2.7` | Added possibility to rename roleBinding for API Gateway, Kibana and Elasticsearch. This allows for multiple deployments into the same namespace. Also, CRD ServiceMonitor selector corrected. Support of ES storage PVC annotations. |
+| `1.2.8` | `tpl` function support in `affinity` value added. `affinity` support added for Kibana and Elasticsearch. `topologySpreadConstraints` support added for APIGW, Elasticsearch and Kibana. |
 
 {{ template "chart.valuesSection" . }}

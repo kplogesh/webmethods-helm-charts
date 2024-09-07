@@ -71,6 +71,8 @@ serviceAccount:
   name: ""
   # If not set and create is true, a name is generated using the fullname template
   roleName: ""
+  # If not set and create is true, a name is generated using the fullname template
+  roleBindingName: "cluster-discovery-rolebinding"
 
 # -- The name of the secret or configmap that contains the license key.
 # Defaults to the release name + chart name + "-license".
@@ -96,6 +98,13 @@ service:
   type: ClusterIP
   port: 80
 
+grpcService:
+  enabled: false
+  type: LoadBalancer
+  azureInternalLoadBalancer: false
+  dnsExternal: false
+  hostname: ""
+
 # multiple ingresses for ui, admin, ext and rt 
 ingresses: 
   ui:
@@ -103,25 +112,34 @@ ingresses:
     enabled: true
     svcName: ""
     svcPort: ""
-    className: ""
+    className: "nginx"
     annotations: 
       nginx.ingress.kubernetes.io/affinity: "cookie"
+      nginx.ingress.kubernetes.io/proxy-body-size: 10m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy_connect_timeout: "600"
       # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     hosts:
-      - host: 
+      - host:
         paths:
           - path: /
             pathType: Prefix
     tls: 
       - secretName: 
         hosts: 
+        csiSecretProvider:
+        secretProviderEnabled: false
+        secretProviderSecretName: 
   rt:
-    defaultHost: 
+    defaultHost: ""
     enabled: true
     svcName: ""
     svcPort: ""
-    className: ""
-    annotations: {}
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 10m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy_connect_timeout: "600"
       # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     hosts:
       - host:
@@ -131,23 +149,30 @@ ingresses:
     tls: 
       - secretName: 
         hosts:
+        secretProviderEnabled: false
+        secretProviderSecretName: 
   admin:
     defaultHost: ""
     enabled: true
     svcName: ""
     svcPort: ""
-    className: ""
+    className: "nginx"
     annotations: 
       nginx.ingress.kubernetes.io/affinity: "cookie"
+      nginx.ingress.kubernetes.io/proxy-body-size: 10m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy_connect_timeout: "600"
+      # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     hosts:
-      - host: default
+      - host:
         paths:
           - path: /
             pathType: Prefix
     tls: 
       - secretName:
         hosts:
-          - default
+        secretProviderEnabled: false
+        secretProviderSecretName: 
 
 # global ingress settings for tls secret name, cert and key
 ingress:
@@ -158,6 +183,10 @@ ingress:
     secretName: ""
     cert: "" 
     key: ""
+    secretProviderEnabled: false
+    secretProviderName: ""
+    secretProviderClassName: ""
+    secretProviderParameters: {}
 
 resources: 
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -183,7 +212,7 @@ resources:
       cpu: 500m
       memory: 4Gi
     limits:
-      # use a high cpu limit to avaoid the container being throttled
+      # use a high cpu limit to avoid the container being throttled
       cpu: 8
       memory: 8Gi
   
@@ -199,7 +228,11 @@ nodeSelector: {}
 
 tolerations: []
 
+# -- Set Pod (anti-) affinity for APIGW. You can use templates inside because `tpl` function is called for rendering.
 affinity: {}
+
+# -- Set Pod topology spread constraints for APIGW. You can use templates inside because `tpl` function is called for rendering. 
+topologySpreadConstraints: {}
 
 # -- Value to add extra host aliases to APIGW container.
 hostAliases: []
@@ -281,6 +314,8 @@ apigw:
   adminPort:               5555
   # -- External Runtime Port for Reverse Invoke Setups. This port must be manually setup after API Gateway was initizalized.
   runtimeExternalPort:     6555
+  # -- gRPC port for High Availability and Fault Tolerance (HAFT) solution. This port must be manually setup after API Gateway was initizalized.
+  grpcPort:                4440
   readinessProbe:
     # -- The readinessprobe scheme (https or http).
     scheme:                "HTTP"
@@ -299,6 +334,8 @@ apigw:
   #       - ALL
   initContainer:
     securityContext: {}
+    # -- If apigw initContainer for ES should be enabled
+    enabled: true
   
   # -- Specifies the location and name of the configuration variables template
   # or the directory containing templates for use with Microservices Runtime or
@@ -322,14 +359,17 @@ apigw:
   # -- The key that holds the admin secret key; defauls to "password"
   adminSecretKey: ""
 
-  # -- Elasticsearch secret name that holds the elastic password and username
-  elasticSecretName: ""
+  # -- The secret that holds the truststore password. If empty the chart will generate the name: fullname + "-es-truststore-secret".
+  elastictrustStoreName: ""
 
-  # -- The key that holds the Elasticsearch user; defauls to "username"
-  elasticSecretUserKey: ""
+  # -- The key that holds the truststore password; defaults to "password"
+  elastictrustStorePassKey: ""
+  
+  # -- The secret that holds the keystore password. If empty the chart will generate the name: fullname + "-es-keystore-secret".
+  elastickeyStoreName: ""
 
-  # -- The key that holds the Elasticsearch password; defauls to "password"
-  elasticSecretPasswordKey: ""
+  # -- The key that holds the keystore password; defaults to "password"
+  elastickeyStorePassKey: ""
 
   # -- Application Properties to overwrite default API Gateway settings. Please check 
   # Handle with care - Most settings should be set via the UI, Admin API, configSources values, or via environment variables. 
@@ -368,7 +408,22 @@ apigw:
     elasticsearch:      
       tenantId: default
       hosts: "{{ default (printf \"%s-%s-es-http\" .Release.Name .Chart.Name) .Values.global.elasticsearch.serviceName }}:{{ .Values.global.elasticsearch.port }}"
-  
+    
+    kibana:
+      dashboardInstance: "{{ printf \"http://%s-%s-kb-http:%d\" .Release.Name .Chart.Name (int .Values.kibana.port) }}"
+      autostart: false
+
+    cluster:
+      aware: "{{- $isClusterEnabled := or (gt (int .Values.replicaCount) 1) .Values.apigw.clusterAware -}} {{- if $isClusterEnabled -}} true {{- else -}} false {{- end }}"
+      name:  IgniteCluster
+      sessTimeout: "60"
+      actionOnStartupError:  standalone
+      ignite:
+        k8sServiceName: "{{ include \"common.names.fullname\" . }}-rt"
+        k8sNamespace:   "{{ .Release.Namespace }}"
+        discoveryPort:     "10100"
+        communicationPort: "10400"
+
   # -- Extra configuration sources for API Gateway
   # Example: 
   # - type: YAML
@@ -380,11 +435,23 @@ apigw:
   # -- Additional labels to be added to apigw pod labels.
   extraLabels: {}
 
+# -- Define values for Prometheus Operator to scrap metrics via annotation or ServiceMonitor.
 prometheus:
-  path: "/metrics"
-  port: "5555"
-  scheme: "http"
-  scrape: "true"
+  path:          "/metrics"
+  port:          "5555"
+  scheme:        "http"
+  ## -- Only used on annotation 
+  scrape:        "true"
+  ## -- Only used on ServiceMonitor
+  interval:      10s
+  ## -- Only used on ServiceMonitor
+  scrapeTimeout: 10s
+
+serviceMonitor:
+  # -- Create and enable CRD ServiceMonitor. The default is `false`.
+  enabled: false
+  # -- Set the monitored service which is connected by ServiceMonitor. Default (if not set) is the `rt` runtime service.  
+  serviceName: ""
 
 metering:
 
@@ -392,7 +459,7 @@ metering:
   enabled: true
   # -- The URL of the metering aggregator server REST API.
   serverUrl: "https://metering.softwareag.cloud/api/measurements"
-  # -- Тhe type of the proxy that the metering client uses. 
+  # -- The type of the proxy that the metering client uses. 
   # Valid values are: 
   # *DIRECT (default). 
   # *HTTP 
@@ -410,7 +477,7 @@ metering:
   # *Numbers: 0-9
   # *Special characters: !@#$%^&*()_+-=[]{}\/?,.<>;
   proxyPass: 
-  # -- Тhe time in milliseconds to establish the initial TCP connection when the metering client calls the server REST endpoint. This is also the time to start the request.
+  # -- The time in milliseconds to establish the initial TCP connection when the metering client calls the server REST endpoint. This is also the time to start the request.
   serverConnectTimeout: "60000"
   # -- The maximum time in milliseconds without data transfer over the TCP connection to the server. This is also the time that it takes for the server to respond. When this time passes, the request fails.
   serverReadTimeout: "300000"
@@ -433,6 +500,16 @@ metering:
   # -- The password for the metering client truststore.
   # Configure this property only if you use a truststore.
   trustStorePassword:
+  # -- Configuration for secretKeyRef containing the password for the metering client truststore.
+  # Configure this property only if you use a truststore.
+  # Mutually exclusive with providing the password directly over metering.trustStorePassword.
+  trustStorePasswordFromSecret:
+    # -- enable secretKeyRef instead of providing password directly
+    enabled: false
+    # -- Name of the referenced secret
+    secretName: ""
+    # -- Key containing the truststore password in the referenced secret
+    secretKey: ""
 
 elasticsearch:
 
@@ -448,8 +525,34 @@ elasticsearch:
   # Make sure that the image corresponds to the version field.
   image: 
 
+  # -- Resource Settings for Elasticsearch
+  # Example: 
+  # 
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi  
+  resources: {}
+
+  # -- Request size of storage. The default is 1Gi.
+  storage: ""
+
+  # -- Use the storage class.
+  storageClassName: ""
+
+  # -- Annotations of PVC storage
+  storageAnnotations: {}
+
   # -- The secret name that holds the sag es user for API Gateway.
   secretName: ""
+
+  # -- The key that holds the Elasticsearch user; defauls to "username"
+  secretUserKey: ""
+
+  # -- The key that holds the Elasticsearch password; defauls to "password"
+  secretPasswordKey: ""
 
   # -- Extra Secrets adding or changing built-in users of Elasticsearch.
   # You can use this to limit the roles of the default elastic user.
@@ -472,7 +575,7 @@ elasticsearch:
     # Overwriting with custom PodDisruptionBudget Policy requires enabled=true.
     # Examples can be seen here: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
     data: {}
-
+  
   # -- Enable and configure service account creation.
   serviceAccount:
     # -- Whether to create a ServiceAccount for Elasticsearch
@@ -482,10 +585,16 @@ elasticsearch:
     # -- Name of the ServiceAccount Role used by the Elasticsearch ServiceAccount.
     # Requires create=true to work.
     roleName: ""
+    # -- Name of the ServiceAccount Rolebinding used by the Elasticsearch ServiceAccount.
+    # Requires create=true to work.
+    roleBindingName: "elasticsearch-rolebinding"
   
   # -- Whether the communication from APIGW and Kibana should be HTTPS
   # Note: you will need to create certificate and a separate truststore for the communication.
   tlsEnabled: false
+
+  # -- The name of the elasticsearch secret. By default it will created by the fullname + "-es-tls-secret" if tlsEnabled is set to true.
+  tlsSecretName: ""
 
   # -- The secret name that holds the keystore password  
   keystoreSecretName: ""
@@ -493,7 +602,13 @@ elasticsearch:
   # -- The name of the secret holding the tls secret
   # By default the name will be fullname of release + "es-tls-secret"
   certificateSecretName: "{{ include \"common.names.fullname\" .}}-es-tls-secret"
-  
+
+  # -- Set Pod (anti-) affinity for ElasticSearch. You can use templates inside because `tpl` function is called for rendering.
+  affinity: {}
+
+  # -- Set Pod topology spread constraints for ElasticSearch. You can use templates inside because `tpl` function is called for rendering. 
+  topologySpreadConstraints: {}
+
   # -- Node sets. See official ElasticSearch documentation at:
   # https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-orchestration.html
   # if you specify node sets here the defaultNodeSet will not be used.
@@ -530,6 +645,12 @@ kibana:
   # -- The ECK version to be used
   version: 8.2.3
 
+  # -- Set Pod (anti-) affinity for Kibana. You can use templates inside because `tpl` function is called for rendering.
+  affinity: {}
+
+  # -- Set Pod topology spread constraints for Kibana. You can use templates inside because `tpl` function is called for rendering. 
+  topologySpreadConstraints: {}
+
   # -- The image that should be used.
   # By default ECK will use the official Elasticsearch images. 
   # Overwrite this to use an image from an internal registry or any custom images.
@@ -539,20 +660,52 @@ kibana:
   # -- The default Kibana Port
   port: 5601
 
+  count: 1
+
   # -- Annotations for Kibana
   annotations: {}
   
   # -- The secret name that holds the kibana user for API Gateway.
   secretName: ""
 
-  # -- The name of kibanas serviceAccount.  
-  serviceAccount: ""
-
   # -- The pod securityContext for kibana pod.
   podSecurityContext: {}
 
   # -- The securityContext for kibana container.
   securityContext: {}
+
+  # -- Custom logging configuration for kibana container.
+  customLogging:
+    # -- Enable custom logging configuration.
+    enabled: false
+    # -- Define appenders for custom logging config.
+    # Example for logging to file:
+    # file:
+    #   type: file
+    #   fileName: /usr/share/kibana/logs/kibana.log
+    #   layout:
+    #     type: pattern
+    appenders: {}
+    # -- Define which appenders are used by root logger.
+    # Example for logging to file additionally to default/console:
+    #   appenders: [file, default]
+    #   level: warn
+    root: {}
+    # -- Define loggers other than root logger.
+    # Example for custom server logger:
+    # - name: server
+    #   appenders: [console]
+    #   level: warn
+    loggers: []
+
+  # -- The definition of extra volumes for kibana.
+  extraVolumes: []
+
+  # -- The definition of extra volumeMounts for kibana.
+  extraVolumeMounts: []
+
+  # -- The definition of extra containers for kibana.
+  extraContainers: []
 
   # -- The definition of extra initContainers for kibana.
   extraInitContainers: []
@@ -580,7 +733,49 @@ kibana:
     # -- Name of the ServiceAccount Role used by the Kibana ServiceAccount.
     # Requires create=true to work.
     roleName: ""
+    # -- Name of the ServiceAccount Rolebinding used by the Kibana ServiceAccount.
+    # Requires create=true to work.
+    roleBindingName: "kibana-rolebinding"
   
+  # -- Configure Kibana's readinessProbe.
+  readinessProbe:
+    httpGet:
+      path: /status
+      port: 5601
+      scheme: HTTP
+    failureThreshold: 3
+    successThreshold: 1
+    periodSeconds: 10
+    timeoutSeconds: 1
+  
+  # -- Configure Kibana's livenessProbe.
+  livenessProbe: {}
+    # tcpSocket:
+    #   port: 5601
+    # failureThreshold: 3
+    # successThreshold: 1
+    # initialDelaySeconds: 30
+    # periodSeconds: 30
+    # timeoutSeconds: 1
+  
+  # Set to 'true' prevents API Gateway Error message in the log, indicating that Kibana is not available.
+  # -- Enable anonymous access to /api/status.
+  allowAnonymousStatus: true
+
+  # -- Enable and configure tls connection from Kibana to Elasticsearch.
+  tls:
+    # -- Whether to enable tls connection from Kibana to Elasticsearch.
+    enabled: false
+    # -- Name of the k8s secret holding the p12 truststore for Kibana
+    secretName: ""
+    # -- File name of the p12 truststore for Kibana
+    trustStoreName: ""
+    # -- Name of the k8s secret containing the password for above p12 truststore in key 'password'
+    truststorePasswordSecret: ""
+    # -- TLS verification mode. Either 'none', 'certificate' or 'full'. Full includes hostname verification (service name must be in alt dns for it to work).
+    verificationMode: certificate
+
+
 # -- Elasticsearch exporter settings. See https://github.com/prometheus-community/elasticsearch_exporter for details.
 prometheus-elasticsearch-exporter:
 
@@ -603,5 +798,13 @@ prometheus-elasticsearch-exporter:
     uri: "http://$(ES_USER):$(ES_PASSWORD)@apigw-apigateway-es-http:9200"
   
   serviceMonitor:
-    enabled: true
-    
+    enabled: false
+
+  podAnnotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: "9108"
+    prometheus.io/scheme: http
+    prometheus.io/scrape: "true"
+
+# -- Import the content as license key and create a ConfigMap named by `licenseConfigMap` value. You can copy/past the content of your provided license key file here.  
+license: |

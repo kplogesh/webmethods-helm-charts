@@ -16,6 +16,8 @@
 #  *   limitations under the License.
 #  *
 #  */
+{{ $apigwname := (include "common.names.fullname" $ ) }}
+{{- $context := . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -58,6 +60,7 @@ spec:
       {{- end }}      
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if or ( .Values.apigw.initContainer.enabled ) ( .Values.extraInitContainers ) }}
       initContainers:
         {{- if .Values.elasticsearch.deploy }} 
         - name: waitforelasticsearch
@@ -107,6 +110,7 @@ spec:
         {{-  if .Values.extraInitContainers }}
         {{- toYaml .Values.extraInitContainers | nindent 8 }}
         {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -129,23 +133,25 @@ spec:
           - name: apigw_elasticsearch_http_password
             valueFrom:
               secretKeyRef:
-                name: {{ include "apigateway.elasticsecretName" . }}
+                name: {{ include "apigateway.elasticsecret" . }}
                 key: {{ include "apigateway.elasticsecretPasswordKey" . }}
           - name: apigw_elasticsearch_http_username
             valueFrom:
               secretKeyRef:
-                name: {{ include "apigateway.elasticsecretName" . }}
+                name: {{ include "apigateway.elasticsecret" . }}
                 key: {{ include "apigateway.elasticsecretUserKey" . }}
+          {{- if .Values.elasticsearch.tlsEnabled }}
           - name: apigw_elasticsearch_https_keystorePassword
             valueFrom:
               secretKeyRef:
                 name: {{ include "apigateway.elastickeystoresecret" . }}
-                key: password     
+                key: {{ include "apigateway.elastickeystoresecretPasswordKey" . }}     
           - name: apigw_elasticsearch_https_truststorePassword
             valueFrom:
               secretKeyRef:
-                name: {{ include "apigateway.elastickeystoresecret" . }}
-                key: password
+                name: {{ include "apigateway.elastictruststoresecret" . }}
+                key: {{ include "apigateway.elastictruststoresecretPasswordKey" . }}
+          {{- end }}
           {{- if .Values.extraEnvs }}
           {{- toYaml .Values.extraEnvs | nindent 10 }}
           {{- end }}
@@ -165,6 +171,11 @@ spec:
           - containerPort: {{ int .Values.apigw.runtimeExternalPort }} 
             name: external-http
             protocol: TCP
+          {{- if .Values.grpcService.enabled }}
+          - containerPort: {{ int .Values.apigw.grpcPort }}
+            name: grpc-http
+            protocol: TCP
+          {{- end }}
           {{- if .Values.extraPorts }}
           {{- toYaml .Values.extraPorts | nindent 10 }}
           {{- end }}                  
@@ -198,13 +209,18 @@ spec:
             - name: apigw-config
               mountPath: /config/application.properties
               subPath:    application.properties
+            {{- if .Values.ingress.tls.secretProviderEnabled }}
+            - name: secrets-store-inline
+              mountPath: /mnt/secrets-store
+              readOnly: true
+            {{- end }}
             {{- if .Values.extraVolumeMounts }}
             {{- if eq "string" (printf "%T" .Values.extraVolumeMounts) }}
               {{- tpl .Values.extraVolumeMounts . | nindent 12 }}              
             {{- else }}
               {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
             {{- end }}
-            {{- end }}                      
+            {{- end }}
         {{- include "common.containers.extraContainers" . | nindent 8 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -212,7 +228,11 @@ spec:
       {{- end }}
       {{- with .Values.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{- tpl (toYaml .) $context  | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- tpl (toYaml .) $context  | nindent 8 }}
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
@@ -249,6 +269,15 @@ spec:
               path: truststore.jks
             - key: keystore.jks
               path: keystore.jks
+      {{- end }}
+      {{- if .Values.ingress.tls.secretProviderEnabled -}}
+      {{- $secretProviderClass := default (printf "%s%s" $apigwname "-ingress-certs") .Values.ingress.tls.secretProviderClassName }}
+      - name: secrets-store-inline
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: {{ $secretProviderClass }}
       {{- end }}
       {{- if .Values.extraVolumes }}
       {{- if eq "string" (printf "%T" .Values.extraVolumes) }}
