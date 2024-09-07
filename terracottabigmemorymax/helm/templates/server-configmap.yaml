@@ -17,6 +17,7 @@
 #  *
 #  */
 {{- $fullName := include "common.names.fullname" . -}}
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
