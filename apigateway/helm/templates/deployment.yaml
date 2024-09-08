@@ -130,12 +130,12 @@ spec:
               secretKeyRef:
                 name: {{ include "apigateway.adminsecretName" . }}
                 key: {{ include "apigateway.adminsecretKey" . }}
-          - name: apigw_elasticsearch_http_password
+          - name: apigw_analyticsDataStore_http_password
             valueFrom:
               secretKeyRef:
                 name: {{ include "apigateway.elasticsecret" . }}
                 key: {{ include "apigateway.elasticsecretPasswordKey" . }}
-          - name: apigw_elasticsearch_http_username
+          - name: apigw_analyticsDataStore_http_username
             valueFrom:
               secretKeyRef:
                 name: {{ include "apigateway.elasticsecret" . }}
