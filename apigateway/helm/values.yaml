@@ -15,7 +15,7 @@ image:
 
 # -- Image pull secret reference. By default looks for `regcred`.
 imagePullSecrets: 
-  - name: regcred
+  - name: ibmregcred
 
 # -- Controls if secrets should be generated automatically.
 secrets:
@@ -210,11 +210,11 @@ resources:
   apigwContainer:
     requests:
       cpu: 500m
-      memory: 4Gi
+      memory: 2Gi
     limits:
       # use a high cpu limit to avoid the container being throttled
-      cpu: 8
-      memory: 8Gi
+      cpu: 2
+      memory: 2Gi
   
 
 autoscaling:
@@ -540,7 +540,7 @@ elasticsearch:
   storage: ""
 
   # -- Use the storage class.
-  storageClassName: ""
+  storageClassName: "local-path"
 
   # -- Annotations of PVC storage
   storageAnnotations: {}
@@ -780,7 +780,7 @@ kibana:
 prometheus-elasticsearch-exporter:
 
   # -- Deploy the prometheus exporter for elasticsearch
-  enabled: true
+  enabled: false
 
   # -- secret for elasticsearch user. Will need to adjust the secret's name. By default the secret name is <releasename>-apigateway-sag-user-es.
   # Adjust accordingly if your release name is different. 
