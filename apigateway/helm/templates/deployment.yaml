@@ -183,7 +183,7 @@ spec:
             tcpSocket:
               port: {{ int .Values.apigw.adminPort }}
             failureThreshold: 3
-            initialDelaySeconds: 120
+            initialDelaySeconds: 180
             periodSeconds: 30
             successThreshold: 1
             timeoutSeconds: 1
@@ -193,7 +193,7 @@ spec:
               port: {{ int .Values.apigw.adminPort }}
               scheme: {{ .Values.apigw.readinessProbe.scheme }} 
             failureThreshold: 3
-            initialDelaySeconds: 30
+            initialDelaySeconds: 180
             periodSeconds: 30
             successThreshold: 1
             timeoutSeconds: 1
