@@ -15,7 +15,7 @@ image:
 
 # -- Image pull secret reference. By default looks for `regcred`.
 imagePullSecrets: 
-  - name: ibmregcred
+  - name: regcred
 
 # -- Controls if secrets should be generated automatically.
 secrets:
