@@ -88,6 +88,7 @@ spec:
         {{- if not .Values.elasticsearch.defaultNodeSet.memoryMapping  }}
         node.store.allow_mmap: false
         {{- end }}
+        reindex.remote.whitelist: "demo-fitness-app-apigateway-es:9240"
       podTemplate:    
         metadata:
           labels: 

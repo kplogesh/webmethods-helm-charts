@@ -116,6 +116,9 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          {{- if .Values.extraCommand }}
+          command: ["/bin/sh", "-c", "({{ .Values.extraCommand }}) && /opt/softwareag/IntegrationServer/bin/startContainer.sh"]
+          {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
           - name: SAG_IS_CONFIG_PROPERTIES
@@ -136,6 +139,16 @@ spec:
                 name: {{ include "apigateway.elasticsecret" . }}
                 key: {{ include "apigateway.elasticsecretPasswordKey" . }}
           - name: apigw_analyticsDataStore_http_username
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "apigateway.elasticsecret" . }}
+                key: {{ include "apigateway.elasticsecretUserKey" . }}
+          - name: apigw_elasticsearch_http_password
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "apigateway.elasticsecret" . }}
+                key: {{ include "apigateway.elasticsecretPasswordKey" . }}
+          - name: apigw_elasticsearch_http_username
             valueFrom:
               secretKeyRef:
                 name: {{ include "apigateway.elasticsecret" . }}
@@ -201,9 +214,9 @@ spec:
             {{- toYaml .Values.resources.apigwContainer | nindent 12 }}
           volumeMounts:
             - name: apigw-config
-              mountPath: /opt/softwareag/IntegrationServer/instances/default/packages/WmAPIGateway/resources/configuration
+              mountPath: /opt/softwareag/IntegrationServer/packages/WmAPIGateway/resources/configuration
             - name: apigw-license
-              mountPath: /opt/softwareag/IntegrationServer/instances/default/config/licenseKey.xml
+              mountPath: /opt/softwareag/IntegrationServer/config/licenseKey.xml
               subPath:   licenseKey.xml
               readOnly:  false
             - name: apigw-config
