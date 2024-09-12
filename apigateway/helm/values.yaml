@@ -285,7 +285,7 @@ extraContainers: []
 extraInitContainers: []
 
 # -- Extra config maps for additional configurations such as extra ports, etc.
-extraConfigMaps: []
+extraConfigMaps: {}
 
 # -- lifecycle hooks to execute on preStop / postStart,...
 # preStop:

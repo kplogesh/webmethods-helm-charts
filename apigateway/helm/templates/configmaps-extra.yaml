@@ -1,4 +1,4 @@
-{{- range .Values.extraConfigMaps }}
+{{ range $name, $map := .Values.extraConfigMaps }}
 ---
 # /*
 #  * Copyright (c) 2023 Software AG, Darmstadt, Germany and/or its licensors
@@ -21,12 +21,26 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .name }}
+  name: {{ $name }}
   labels:
     {{- include "common.labels.standard" $ | nindent 4 }}
-    {{- with $.Values.extraLabels -}}
+    {{- with $.Values.extraLabels }}
     {{ toYaml . | nindent 4 }}
     {{- end }}
-data: 
-  {{- toYaml .data | nindent 2 }}  
+{{- if $map.binaryData }}
+binaryData:
+  {{- range $key, $val := $map.binaryData }}
+  {{ $key }}: {{ $val | b64enc }}
+  {{- end }}
+{{- else }}
+data:
+  {{- range $key, $val := $map.data }}
+  {{ $key }}: |-
+    {{- if kindIs "string" $val }}
+    {{- tpl $val $ | nindent 4 }}
+    {{- else }}
+    {{- toYaml $val | nindent 4 }}
+    {{- end }}
+  {{- end }}
+{{- end }}
 {{- end }}
