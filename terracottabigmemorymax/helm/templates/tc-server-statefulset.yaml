@@ -19,7 +19,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "common.names.fullname" . }}
   labels:
     {{- include "common.labels.standard" . | nindent 4 }}
     {{- with .Values.extraLabels -}}
@@ -31,12 +31,12 @@ spec:
   replicas: {{ mul $.Values.terracotta.stripeCount $.Values.terracotta.nodeCountPerStripe }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
-  serviceName: {{ .Release.Name }}
+      app: {{ include "common.names.fullname" . }}
+  serviceName: {{ include "common.names.fullname" . }}
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
+        app: {{ include "common.names.fullname" . }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

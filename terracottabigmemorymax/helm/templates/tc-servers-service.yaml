@@ -19,9 +19,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "common.names.fullname" . }}
   labels:
-    app: {{ .Release.Name }}
+    app: {{ include "common.names.fullname" . }}
     {{- include "common.labels.standard" . | nindent 4 }}
     {{- with .Values.extraLabels -}}
     {{ toYaml . | nindent 4 }}
@@ -37,5 +37,5 @@ spec:
     - name: managementport
       port: {{ .Values.terracotta.tsaManagementPort }}
   selector:
-    app: {{ .Release.Name }}
+    app: {{ include "common.names.fullname" . }}
   publishNotReadyAddresses: true
