@@ -138,7 +138,7 @@ spec:
               mountPath: {{ .Values.microservicesruntime.installDir }}/licenseKey.xml
               subPath:   licenseKey.xml
               readOnly:  true
-            {{- if .Values.terracotta.license }}  
+            {{- if hasKey .Values.terracotta "license" }} 
             - name: terracotta-license
               mountPath: {{ .Values.microservicesruntime.installDir }}/../common/conf/terracotta-license.key
               subPath:   terracotta-license.key
