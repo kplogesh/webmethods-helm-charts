@@ -500,7 +500,7 @@ jobs:
     activeDeadlineSeconds: 600
     restartPolicy: OnFailure
     image:
-      repository: redhat/ubi8
+      repository: smartbear/soapuios-testrunner
       tag: latest
       imagePullPolicy: IfNotPresent
     command:
