@@ -489,3 +489,22 @@ metering:
   # -- The password for the metering client truststore.
   # Configure this property only if you use a truststore.
   trustStorePassword:
+
+jobs:
+  - name: soapui-job
+    annotations:
+      argocd.argoproj.io/hook: post-sync
+      argocd.argoproj.io/hook-delete-policy: before-hook-creation
+    backOffLimit: 2
+    ttlSecondsAfterFinished: 86400
+    activeDeadlineSeconds: 600
+    restartPolicy: OnFailure
+    image:
+      repository: redhat/ubi8
+      tag: latest
+      imagePullPolicy: IfNotPresent
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "testing"
