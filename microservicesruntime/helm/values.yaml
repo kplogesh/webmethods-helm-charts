@@ -492,6 +492,9 @@ metering:
 
 jobs:
   - name: soapui-job
+    annotations:
+      argocd.argoproj.io/hook: PostSync
+      argocd.argoproj.io/hook-delete-policy: HookSucceeded
     backOffLimit: 2
     ttlSecondsAfterFinished: 86400
     activeDeadlineSeconds: 600
