@@ -138,10 +138,12 @@ spec:
               mountPath: {{ .Values.microservicesruntime.installDir }}/licenseKey.xml
               subPath:   licenseKey.xml
               readOnly:  true
+            {{- if .Values.terracotta.license }}  
             - name: terracotta-license
               mountPath: {{ .Values.microservicesruntime.installDir }}/../common/conf/terracotta-license.key
               subPath:   terracotta-license.key
               readOnly:  true
+            {{- end }}
             - name: application-properties
               mountPath: {{ .Values.microservicesruntime.installDir }}/application.properties
               subPath:   application.properties
@@ -221,6 +223,7 @@ spec:
             items:
             - key:  licensekey
               path: licenseKey.xml
+        {{- if .Values.terracotta.license }}
         - name: terracotta-license
           configMap:
             name: {{ include "microservicesruntime.licenseConfigMapName" . }}
@@ -228,6 +231,7 @@ spec:
             items:
             - key:  terracotta-license.key
               path: terracotta-license.key
+        {{- end }}
         - name: application-properties
           configMap:
             name: {{ include "common.names.fullname" . }}
