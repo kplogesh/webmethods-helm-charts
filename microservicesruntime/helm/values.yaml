@@ -56,8 +56,8 @@ extraEnvs: []
 # -- Extra Ports to be defined, note: these ports need to be created 
 extraPorts: []
 
-terracotta:
-  license:
+#terracotta:
+#  license:
 
 # -- Extra persistent volumes to be deployed with the release.
 # Ensure that the PersistentVolume 'name' has a unique name (e.g. by using the Release Namespace)
