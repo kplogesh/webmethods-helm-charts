@@ -527,7 +527,7 @@ jobs:
         for project_file in "$PROJECT_DIR"/*.xml; do
           if [ -f "$project_file" ]; then
             echo "Executing test for project: $project_file"
-            $SOAPUI_HOME/$SOAPUI_DIR/bin/testrunner.sh -f "/reports" -r -j -e http://msrapp-microservicesruntime:5555 -aAI '$project_file'
+            $SOAPUI_HOME/$SOAPUI_DIR/bin/testrunner.sh -f "/reports" -r -j -e http://msrapp-microservicesruntime:5555 -aAI $project_file
           else
             echo "No XML files found in $PROJECT_DIR."
           fi
