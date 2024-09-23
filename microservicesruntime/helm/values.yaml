@@ -525,5 +525,5 @@ jobs:
     volumeMounts:
       - name: project-dir
         mountPath: "/projects"
-      - name: report-dir
+      - name: reports-dir
         mountPath: "/reports"
