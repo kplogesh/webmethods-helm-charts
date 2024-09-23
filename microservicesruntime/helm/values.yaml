@@ -510,6 +510,9 @@ jobs:
       repository: smartbear/soapuios-testrunner
       tag: latest
       imagePullPolicy: IfNotPresent
+    env:
+      - name: COMMAND_LINE
+        value: "-f/%reports% '/%project%/project.xml' -r -j -e http://msrapp-microservicesruntime:5555 -aA"
     command:
       - /bin/sh
       - -c
