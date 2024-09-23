@@ -522,7 +522,7 @@ jobs:
       - -c
       - |
         echo "Running SoapUI tests for all the projects..."
-        PROJECT_DIR = "/project" 
+        PROJECT_DIR="/project" 
         # Loop over all XML files in the project directory
         for project_file in "$PROJECT_DIR"/*.xml; do
           if [ -f "$project_file" ]; then
