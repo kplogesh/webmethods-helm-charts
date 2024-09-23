@@ -521,7 +521,8 @@ jobs:
       - /bin/sh
       - -c
       - |
-        echo "testing $SOAPUI_HOME"
+        echo "Start tests"
+        /usr/local/SmartBear/$SOAPUI_DIR/entryPoint.sh
         sleep 300
     volumes:
       - name: project-dir
