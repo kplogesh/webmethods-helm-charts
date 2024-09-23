@@ -532,6 +532,6 @@ jobs:
         emptyDir: {}
     volumeMounts:
       - name: project-dir
-        mountPath: "/projects"
+        mountPath: "/project"
       - name: reports-dir
         mountPath: "/reports"
