@@ -111,7 +111,7 @@ spec:
             {{- end }}
             {{- with or $job.volumeMounts $opsExtraConfigMaps }}
             volumeMounts:
-{{- if $job.volumes }}
+{{- if $job.volumeMounts }}
 {{ toYaml . | indent 12 }}
 {{- end }}
             {{- if $job.isOperationsSpecific }}
@@ -244,7 +244,7 @@ spec:
         {{- end }}
         {{- with or $job.volumeMounts $opsExtraConfigMaps }}
         volumeMounts:
-{{- if $job.volumes }}
+{{- if $job.volumeMounts }}
 {{ toYaml . | indent 8 }}
 {{- end }}
         {{- if $job.isOperationsSpecific }}
