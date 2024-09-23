@@ -505,7 +505,7 @@ jobs:
   - name: smoke-tests-job
     annotations:
       argocd.argoproj.io/hook: PostSync
-      argocd.argoproj.io/hook-delete-policy: HookSucceeded
+      argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
     backOffLimit: 2
     ttlSecondsAfterFinished: 86400
     activeDeadlineSeconds: 600
@@ -532,6 +532,14 @@ jobs:
             echo "No XML files found in $PROJECT_DIR."
           fi
         done
+
+        echo "Tests finished. Listing reports..."
+        find /reports -type f -name "*.txt" | while read report; do
+          echo -e "\n\nReport: $report";
+          cat $report;
+        done
+
+        # To keep container alive for few mins
         sleep 300
     volumes:
       - name: project-dir
