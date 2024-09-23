@@ -521,7 +521,7 @@ jobs:
       - /bin/sh
       - -c
       - |
-        echo "testing"
+        echo "testing $SOAPUI_HOME"
         sleep 300
     volumes:
       - name: project-dir
