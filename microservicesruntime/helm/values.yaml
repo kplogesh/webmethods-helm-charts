@@ -521,8 +521,8 @@ jobs:
       - /bin/sh
       - -c
       - |
-        echo "Start tests"
-        /usr/local/SmartBear/entryPoint.sh
+        echo "Start tests..."
+        /usr/local/SmartBear/EntryPoint.sh
         sleep 300
     volumes:
       - name: project-dir
