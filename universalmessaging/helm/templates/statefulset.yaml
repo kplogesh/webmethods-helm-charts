@@ -56,7 +56,7 @@ spec:
       volumes:
         - name: licence-xml
           configMap:
-            name: {{ .Values.licenseConfigMap }}            
+            name: {{ include "common.names.fullname" . }}-license         
             defaultMode: 420
         - name: jmx-exporter-config
           configMap:
