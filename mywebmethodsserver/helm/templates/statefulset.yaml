@@ -139,25 +139,25 @@ spec:
             successThreshold:    1
             timeoutSeconds:      1
           volumeMounts:
-            {{- if .Values.extraConfigMaps }}
-            {{- range $name, $map := .Values.extraConfigMaps }}
-            {{- if $map.automount }}            
-            {{- if $map.binaryData }}              
-            {{- range $key, $val := $map.binaryData }}
-            - name: {{ $name }}
-              mountPath: {{ default $.Values.extraConfigMapAutomountDir $map.automountDir }}/{{ $key }}
-              subPath: {{ $key }}
-            {{- end }}
-            {{- else }}
-            {{- range $key, $val := $map.data }}
-            - name: {{ $name }}
-              mountPath: {{ $map.automountDir }}/{{ $key }}
-              subPath: {{ $key }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- end }} 
+          {{- if .Values.extraConfigMaps }}
+          {{- range $name, $map := .Values.extraConfigMaps }}
+          {{- if $map.automount }}            
+          {{- if $map.binaryData }}              
+          {{- range $key, $val := $map.binaryData }}
+          - name: {{ $name }}
+            mountPath: {{ default $.Values.extraConfigMapAutomountDir $map.automountDir }}/{{ $key }}
+            subPath: {{ $key }}
+          {{- end }}
+          {{- else }}
+          {{- range $key, $val := $map.data }}
+          - name: {{ $name }}
+            mountPath: {{ $map.automountDir }}/{{ $key }}
+            subPath: {{ $key }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- end }} 
           {{- if .Values.storage.enabled }}
           {{- range $key,$value := .Values.storage.dirs }}
           - name: {{ if $value.volume }} {{ $key }} {{ else }} {{ $.Values.storage.defaultVolume }} {{ end }}
