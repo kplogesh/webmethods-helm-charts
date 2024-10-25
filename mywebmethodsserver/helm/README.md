@@ -16,13 +16,14 @@ Sub-folder `examples` contains some *values* examples for more use-cases. To use
 | Use-case | Description |
 |-----|------|
 | [mws-postgresql](../examples/postgresql/README.md) | Using MWS with external PostgreSQL database |
+| [service-auditing-monitor](../examples/service-auditing-monitor/README.md) | Using MWS as Service Auditing Monitor |
 
 ## Install MyWebMethods Server Release
 
 Install release with pulling image and setting secret (to pull image) ...
 
 ```shell
-helm install wm-mws microservicesruntime
+helm install wm-mws mywebmethodsserver
 ```
 
 ... define default domain name of Ingress service host ...
@@ -39,15 +40,27 @@ helm install wm-mws microservicesruntime
   --set "ingress.hosts[0].paths[0].port=5555"
 ```
 
+## Version History
+
+| Version | Changes and Description |
+|-----|------|
+| `1.0.0` | Initial release |
+| `1.0.1` | CRD `ServiceMonitor` added |
+| `1.0.2` | `storage.enabled` added in `values.yaml`. For backward reason is this value set to `true` as default. `false` doesn't create and mount any PV. (You can test this feature if you don't want to deploy any own MWS application. MWS is more stateless and has only the database as stateful dependency.) |
+| `1.0.2` | `containerName` added in `values.yaml`. Default is the Chart name. (Use `helm repo update` to get latest Helm Chart version.) |
+| `1.0.3` | `tpl` function support in `affinity` value added. `topologySpreadConstraints` support added. |
+| `1.0.4` | `priorityClassName` support added. Implementation of `extraConfigMaps`, `extraVolumeMounts` and `extraVolumes` added. |
+
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| affinity | object | `{}` |  |
+| affinity | object | `{}` | Set Pod (anti-) affinity. You can use templates inside because `tpl` function is called for rendering. |
 | autoscaling.enabled | bool | `false` |  |
 | autoscaling.maxReplicas | int | `100` |  |
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| containerName | string | `nil` | The name of the main container, by default this will be Chart name. |
 | extraConfigMaps | list | `[]` | Extra config maps for addtional configurations such as extra ports, etc. |
 | extraContainers | string | `nil` | Extra containers which should run in addtion to the main container as a sidecar - name: do-something   image: busybox   command: ['do', 'something'] |
 | extraEnvs | object | `{}` | Exta environment properties to be passed on to the MyWebMethods Server |
@@ -74,16 +87,19 @@ helm install wm-mws microservicesruntime
 | mws.jdbc.password | string | `nil` | The password of the My webMethods Server database user. If user and password are provided a secret will automatically generated initially. E.g. helm install webmethods/mywebmethodsserver mws --set mws.jdbc.user=mwsuser --set mws.jdbc.password=mydbpassword Do not save this information in a plain value file, use --set and reference it from an environment variable, or setup manually |
 | mws.jdbc.type | string | `"postgresql"` | The type of database used by the server instance. Valid values are: *ms - Microsoft SQL Server *oracle - Oracle *db2 - DB2 *mysqlee - MySQL Enterprise Edition *mysqlce - MySQL Community Edition *postgresql - PostgreSQL |
 | mws.jdbc.user | string | `nil` | The user name to use when connecting to the My webMethods Server database. If user and password are provided a secret will automatically generated initially.  E.g. helm install webmethods/mywebmethodsserver mws --set mws.jdbc.user=mwsuser --set mws.jdbc.password=mydbpassword Do not save this information in a plain value file, use --set and reference it from an environment variable, or setup manually |
-| mws.secretName | string | `nil` | The secret name containing user and password for the JDBC connection By default the secret name contains of the full name + "-mws-secret".  Provide a value if you setup a secret manually. Example: kubectl create secret mws-secret --from-literal=user=mwsuser --from-literal=password=mypassword and use "secretName: mws-secret" in your values file |
+| mws.secretName | string | `nil` | The secret name containing user and password for the JDBC connection By default the secret name contains of the full name + "-mws-secret".  Provide a value if you setup a secret manually. Example: `kubectl create secret generic mws-secret --from-literal=user=mwsuser --from-literal=password=mypassword` and use `secretName: mws-secret` in your values file |
 | nameOverride | string | `""` | Overwrites Chart name of release name in workload name. As default, the workload name is release name + '-' + Chart name. The workload name is at the end release name + '-' + value of `nameOverride`. |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
+| priorityClassName | string | `""` | Set Pods' Priority Class Name ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/ |
+| prometheus | object | `{"interval":"10s","path":"/metrics","port":"8585","scheme":"http","scrape":"true","scrapeTimeout":"10s"}` | Define values for Prometheus Operator to scrap metrics via annotation or ServiceMonitor. |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` | Define CPU and memory resources for container |
 | securityContext | object | `{}` | The security context the pods should run in. capabilities:   drop:   - ALL readOnlyRootFilesystem: true runAsNonRoot: true runAsUser: 1000 |
 | service | object | `{"port":8585,"type":"ClusterIP"}` | The service type of the MyWebMethodsServer service |
 | serviceAccount.create | bool | `false` |  |
+| serviceMonitor | object | `{"enabled":false}` | Create and enable ServiceMonitor. The default is `false`. |
 | storage.defaultAccessMode | list | `["ReadWriteOnce"]` | The default access mode |
 | storage.defaultStorageClass | string | `nil` | The default storage class for all application directories |
 | storage.defaultStorageRequest | string | `"1Gi"` | Storage claim request size |
@@ -98,4 +114,6 @@ helm install wm-mws microservicesruntime
 | storage.dirs.libsdir.volume | string | `nil` | when set to true, a separate volume will be created for this directory. Otherwise, the directory will be created on the defaultVolume. |
 | storage.dirs.logsdir | object | `{"accessMode":[],"path":"/opt/softwareag/MWS/volumes/logs","storageClass":null,"storageRequest":null,"volume":null}` | Directory on the container file system to which My webMethods Server persists all log files, generated by the My webMethods Server instance. By default, the directory contains the following subdirectories: *instance_logs - corresponds to the default SAGDir/MWS/server/instanceName/logs directory of an on-premise My webMethods Server installation. *profile_logs - corresponds to the SAGDir/profiles/MWS_default/logs directory of an on-premise My webMethods Server installation. *cli_logs - for all logs, stored in the SAGDir/MWS/bin directory of an on-premise installation. Logs for OSGi profile-related operations that My webMethods Server executes during operation, for example, when adding external libraries, are stored in cli_logs/archive. If not specified, My webMethods Server uses the default directory SAGHOME/MWS/volumes/logs on the container file system.     |
 | storage.dirs.logsdir.volume | string | `nil` | when set to true, a separate volume will be created for this directory. Otherwise, the directory will be created on the defaultVolume. |
+| storage.enabled | bool | `true` | Enable or disable persistent storage handling. `true`creates (PVCs) and mounts all volumes. `false` doesn't create any PVC. |
 | tolerations | list | `[]` |  |
+| topologySpreadConstraints | object | `{}` | Set Pod topology spread constraints. You can use templates inside because `tpl` function is called for rendering.  |

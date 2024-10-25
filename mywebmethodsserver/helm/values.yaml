@@ -16,6 +16,9 @@ nameOverride: ""
 # -- Overwrites full workload name. As default, the workload name is release name + '-' + Chart name.
 fullnameOverride: ""
 
+# -- The name of the main container, by default this will be Chart name.
+containerName:
+
 serviceAccount:
   create: false
 
@@ -133,10 +136,20 @@ nodeSelector: {}
 
 tolerations: []
 
+# -- Set Pod (anti-) affinity. You can use templates inside because `tpl` function is called for rendering.
 affinity: {}
 
-#- storage settings for the different application directories
+# -- Set Pod topology spread constraints. You can use templates inside because `tpl` function is called for rendering. 
+topologySpreadConstraints: {}
+
+# -- Set Pods' Priority Class Name
+# ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
+priorityClassName: ""
+
+# storage settings for the different application directories
 storage:
+  # -- Enable or disable persistent storage handling. `true`creates (PVCs) and mounts all volumes. `false` doesn't create any PVC.
+  enabled: true
   # -- The default storage class for all application directories
   defaultStorageClass: 
   # -- Storage claim request size
@@ -204,8 +217,8 @@ mws:
   # -- The secret name containing user and password for the JDBC connection
   # By default the secret name contains of the full name + "-mws-secret". 
   # Provide a value if you setup a secret manually. Example:
-  # kubectl create secret mws-secret --from-literal=user=mwsuser --from-literal=password=mypassword
-  # and use "secretName: mws-secret" in your values file
+  # `kubectl create secret generic mws-secret --from-literal=user=mwsuser --from-literal=password=mypassword`
+  # and use `secretName: mws-secret` in your values file
   secretName: 
   jdbc:
     # -- Database connection URL, based on the type of database and the driver.
@@ -228,3 +241,19 @@ mws:
     # E.g. helm install webmethods/mywebmethodsserver mws --set mws.jdbc.user=mwsuser --set mws.jdbc.password=mydbpassword
     # Do not save this information in a plain value file, use --set and reference it from an environment variable, or setup manually
     password:
+
+# -- Define values for Prometheus Operator to scrap metrics via annotation or ServiceMonitor.
+prometheus:
+  path:          "/metrics"
+  port:          "8585"
+  scheme:        "http"
+  ## -- Only used on annotation 
+  scrape:        "true"
+  ## -- Only used on ServiceMonitor
+  interval:      10s
+  ## -- Only used on ServiceMonitor
+  scrapeTimeout: 10s
+
+# -- Create and enable ServiceMonitor. The default is `false`.
+serviceMonitor:
+  enabled: false
