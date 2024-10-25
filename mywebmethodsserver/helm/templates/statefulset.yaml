@@ -139,6 +139,25 @@ spec:
             successThreshold:    1
             timeoutSeconds:      1
           volumeMounts:
+            {{- if .Values.extraConfigMaps }}
+            {{- range $name, $map := .Values.extraConfigMaps }}
+            {{- if $map.automount }}            
+            {{- if $map.binaryData }}              
+            {{- range $key, $val := $map.binaryData }}
+            - name: {{ $name }}
+              mountPath: {{ default $.Values.extraConfigMapAutomountDir $map.automountDir }}/{{ $key }}
+              subPath: {{ $key }}
+            {{- end }}
+            {{- else }}
+            {{- range $key, $val := $map.data }}
+            - name: {{ $name }}
+              mountPath: {{ $map.automountDir }}/{{ $key }}
+              subPath: {{ $key }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- end }} 
           {{- if .Values.storage.enabled }}
           {{- range $key,$value := .Values.storage.dirs }}
           - name: {{ if $value.volume }} {{ $key }} {{ else }} {{ $.Values.storage.defaultVolume }} {{ end }}
@@ -158,6 +177,19 @@ spec:
         {{- toYaml .Values.extraContainers | nindent 8 }}
         {{- end }}
       volumes:
+        {{- if .Values.extraConfigMaps }}
+        # automount configmap volumes
+        {{- range $name, $map := .Values.extraConfigMaps }}
+        {{- if $map.automount }}                    
+        - name: {{ $name }}
+          configMap:
+            name: {{ $name }}
+            {{- if $map.defaultMode }}
+            defaultMode: {{ $map.defaultMode }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
         {{- if .Values.extraVolumes }}
         {{- if eq "string" (printf "%T" .Values.extraVolumes) }}
           {{- tpl .Values.extraVolumes . | nindent 8 }}
