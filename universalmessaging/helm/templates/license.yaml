@@ -27,5 +27,5 @@ metadata:
     {{ toYaml . | nindent 4 }}
     {{- end }}
 data:
-  license.xml: |
-    {{- .Values.um.license | nindent 4 }}
+  licence.xml: |
+    {{- .Values.um.licence | nindent 4 }}

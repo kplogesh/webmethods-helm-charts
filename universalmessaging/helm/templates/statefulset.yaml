@@ -105,8 +105,8 @@ spec:
           - name: configuration
             mountPath: /opt/softwareag/common/conf
           - name: licence-xml
-            mountPath: /opt/softwareag/UniversalMessaging/server/umserver/licence/license.xml
-            subPath: license.xml
+            mountPath: /opt/softwareag/UniversalMessaging/server/umserver/licence/licence.xml
+            subPath: licence.xml
           - name: jmx-exporter-config
             mountPath: /opt/softwareag/UniversalMessaging/server/umserver/bin/jmx_sag_um_exporter.yaml
             subPath: jmx_sag_um_exporter.yaml
