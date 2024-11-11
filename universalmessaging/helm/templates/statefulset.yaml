@@ -105,14 +105,15 @@ spec:
           - name: configuration
             mountPath: /opt/softwareag/common/conf
           - name: licence-xml
-            mountPath: /opt/softwareag/UniversalMessaging/server/umserver/licence/
+            mountPath: /opt/softwareag/UniversalMessaging/server/umserver/licence/license.xml
+            subPath: license.xml
           - name: jmx-exporter-config
             mountPath: /opt/softwareag/UniversalMessaging/server/umserver/bin/jmx_sag_um_exporter.yaml
-            subPath:   jmx_sag_um_exporter.yaml
+            subPath: jmx_sag_um_exporter.yaml
             readOnly:  true
           - name: custom-server-common
             mountPath: /opt/softwareag/UniversalMessaging/server/umserver/bin/Custom_Server_Common.conf
-            subPath:   Custom_Server_Common.conf
+            subPath: Custom_Server_Common.conf
             readOnly:  true
           {{- if .Values.extraVolumeMounts }}
           {{- if eq "string" (printf "%T" .Values.extraVolumeMounts) }}
